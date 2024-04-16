@@ -11,8 +11,7 @@ class MiniSparky:
         self.spark = SparkSession.builder \
             .appName("dfCore") \
             .master("local[1]") \
-            .config("spark.driver.logLevel", "ERROR") \
-            .config("spark.executor.logLevel", "ERROR") \
+            .config("spark.log.level", "ERROR") \
             .config("spark.driver.memory", "512m") \
             .config("spark.executor.memory", "512m") \
             .config("spark.executor.cores", "1") \

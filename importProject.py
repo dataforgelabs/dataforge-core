@@ -27,7 +27,6 @@ class ImportProject:
                     self.list_files(file.path, file.name)
                 elif file.name.endswith(".yaml"):
                     self.load_file(file.path, file.name)
-        print("Files loaded")
         self._config.pg.sql("SELECT meta.svc_import_complete(%s, 'I')", [self.import_id])
         self._config.pg.sql("SELECT meta.imp_parse_objects(%s)", [self.import_id])
         print("Files parsed")
@@ -42,13 +41,14 @@ class ImportProject:
 
 
     def list_files(self, path: str, folder_name: str):
+        print("Importing files..")
         with os.scandir(path) as entries:
             for file in entries:
                 if file.is_file() & file.name.endswith(".yaml"):
                     self.load_file(file.path, folder_name + '/' + file.name)
 
     def load_file(self, full_path: str, path: str):
-        print("Importing file ", path)
+        print(path)
         with open(full_path, 'r') as file:
             file_js = yaml.safe_load(file)
             self._config.pg.sql("SELECT meta.svc_import_load_object(%s, %s, %s)",
