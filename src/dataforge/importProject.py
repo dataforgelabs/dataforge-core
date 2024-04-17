@@ -1,11 +1,10 @@
 import json
 import os
 import sys
-
-from mainConfig import MainConfig
 import yaml
+from .mainConfig import MainConfig
+from .miniSparky import MiniSparky
 
-from miniSparky import MiniSparky
 
 
 class ImportProject:
@@ -58,6 +57,7 @@ class ImportProject:
         exps = self._config.pg.sql("SELECT meta.impc_test_expressions(%s)", [self.import_id])
         self.ms = MiniSparky(self._config)
         self.test_expressions_recursive(exps)
+        self.ms.stop()
 
     def test_expressions_recursive(self, test_expressions, recursion_level=0):
         try:
@@ -71,7 +71,7 @@ class ImportProject:
             test_results_str = json.dumps(test_results)
             res = self._config.pg.sql("SELECT meta.impc_update_test_results(%s, %s)",
                                             (self.import_id, test_results_str))
-            if res['error']:
+            if res.get('error'):
                 self.fail_import('Invalid expression detected. See log file for details')
             if recursion_level > 20:
                 self.fail_import('Maximum recursion exceeded while testing expressions. Check error logs and '
@@ -79,6 +79,7 @@ class ImportProject:
             if len(res['next']) > 0:
                 self.test_expressions_recursive(res['next'], recursion_level + 1)
         except Exception as e:
+            print(e)
             self.fail_import(str(e))
 
     def fail_import(self, message):

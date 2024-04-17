@@ -1,0 +1,14 @@
+README.md
+pyproject.toml
+src/dataforge/__init__.py
+src/dataforge/importProject.py
+src/dataforge/main.py
+src/dataforge/mainConfig.py
+src/dataforge/miniSparky.py
+src/dataforge/pg.py
+src/dataforge.egg-info/PKG-INFO
+src/dataforge.egg-info/SOURCES.txt
+src/dataforge.egg-info/dependency_links.txt
+src/dataforge.egg-info/entry_points.txt
+src/dataforge.egg-info/requires.txt
+src/dataforge.egg-info/top_level.txt

@@ -1,8 +1,6 @@
-import json
-
 from pyspark.sql import SparkSession
 from pyspark.sql.types import DataType, StructType, ArrayType, DecimalType
-from mainConfig import MainConfig
+from .mainConfig import MainConfig
 
 
 class MiniSparky:
@@ -11,7 +9,9 @@ class MiniSparky:
         self.spark = SparkSession.builder \
             .appName("dfCore") \
             .master("local[1]") \
-            .config("spark.log.level", "ERROR") \
+            .config("spark.driver.extraJavaOptions", "-Dlog4j.rootLogger.level=OFF") \
+            .config("spark.executor.extraJavaOptions", "-Dlog4j.rootLogger.level=OFF") \
+            .config("spark.log.level", "OFF") \
             .config("spark.driver.memory", "512m") \
             .config("spark.executor.memory", "512m") \
             .config("spark.executor.cores", "1") \
@@ -77,3 +77,7 @@ class MiniSparky:
                 "type": "error",
                 "message": str(e)
             }
+
+    def stop(self):
+        self.spark.stop()
+

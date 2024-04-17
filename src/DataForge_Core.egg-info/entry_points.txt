@@ -1,0 +1,2 @@
+[console_scripts]
+dataforge = dataforge.main:main
