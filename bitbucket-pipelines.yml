@@ -1,0 +1,10 @@
+clone:
+  depth: full
+pipelines:
+  branches:
+    main:
+      - step:
+          name: Clone to GitHub
+          script:
+            - git remote add upstream git@github.com:dataforgelabs/dataforge-core.git
+            - git push --force upstream $BITBUCKET_BRANCH
