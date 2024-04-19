@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 [project]
 name = "dataforge-core"
-version = "0.1.0"
+version = "0.1.1"
 authors = [
     {name="Vadim Orlov", email="vorlov@dataforgelabs.com"}
 ]
@@ -20,7 +20,7 @@ dependencies = [
 # All the following settings are optional:
 where = ["cli"]  # ["."] by default
 [tool.setuptools.package-data]
-dataforge = ["*.txt", "*.yaml", "*.sql"]
+"*" = ["*.txt", "*.yaml", "*.sql"]
 [project.scripts]
 dataforge = "dataforge.main:main"
 [project.urls]

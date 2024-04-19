@@ -1,3 +1,4 @@
+LICENSE
 MANIFEST.in
 README.md
 pyproject.toml
@@ -7,6 +8,11 @@ cli/dataforge/main.py
 cli/dataforge/mainConfig.py
 cli/dataforge/miniSparky.py
 cli/dataforge/pg.py
+cli/dataforge/resources/pg_deploy.sql
+cli/dataforge/resources/project/meta.yaml
+cli/dataforge/resources/project/relations.yaml
+cli/dataforge/resources/project/outputs/output1.yaml
+cli/dataforge/resources/project/sources/source1.yaml
 cli/dataforge_core.egg-info/PKG-INFO
 cli/dataforge_core.egg-info/SOURCES.txt
 cli/dataforge_core.egg-info/dependency_links.txt

@@ -2,6 +2,9 @@ import argparse
 import os
 import shutil
 import sys
+import traceback
+from types import ModuleType
+
 from importlib_resources.abc import Traversable
 from .pg import Pg
 import importlib_resources
@@ -35,11 +38,15 @@ class MainConfig:
             self.pg.seed()
         self.source_path = os.getcwd() if args.source is None else args.source
         if args.init:
-            if self.pg.confirm_action(f"All files and subfolders in {self.source_path} will be deleted. Continue (y/n)? "):
-                shutil.rmtree(self.source_path, ignore_errors=True)
-                os.makedirs(self.source_path)
-                self.traverse_resource_dir(importlib_resources.files('cli.dataforge.resources.project'))
-            print(f"Initialized project in {self.source_path}")
+            try:
+                if self.pg.confirm_action(f"All files and subfolders in {self.source_path} will be deleted. Continue (y/n)? "):
+                    shutil.rmtree(self.source_path, ignore_errors=True)
+                    os.makedirs(self.source_path)
+                    self.traverse_resource_dir(importlib_resources.files().joinpath('resources', 'project'))
+                print(f"Initialized project in {self.source_path}")
+            except Exception as e:
+                traceback.print_stack()
+                print(f"Error initializing project in {self.source_path} : {e}")
             sys.exit(0)
         self.output_path = os.path.join(self.source_path, 'target')
         self.log_path = os.path.join(self.output_path, 'log.txt')

@@ -3,4 +3,4 @@ __pycache__/
 /.idea
 /.idea_modules
 .venv/
-*.egg-info/
+cli/dataforge_core.egg-info/

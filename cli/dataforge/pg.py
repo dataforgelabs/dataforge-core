@@ -60,7 +60,7 @@ class Pg:
                  "DROP SCHEMA IF EXISTS log CASCADE;", fetch=False)
         #  Deploy DB code
         print("Initializing database..")
-        deploy_sql = files('cli.dataforge.resources').joinpath('pg_deploy.sql').read_text()
+        deploy_sql = files().joinpath('resources', 'pg_deploy.sql').read_text()
         self.sql(deploy_sql, fetch=False)
         print("Database initialized")
 
