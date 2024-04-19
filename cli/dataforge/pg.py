@@ -1,6 +1,7 @@
 import os
 import sys
 import psycopg2
+from importlib_resources import files
 
 
 class Pg:
@@ -21,43 +22,49 @@ class Pg:
             print(f"Error connecting to Postgres: {e}")
             sys.exit(1)
 
-    def sql(self, query: str, params=None):
+    def sql(self, query: str, params=None, fetch=True):
         # Execute a query
         cur = self.conn.cursor()
         cur.execute(query, params)
         # Retrieve query results
-        res = cur.fetchone()
+        res = cur.fetchone() if fetch else [None]
         cur.close()
         return res[0]
 
     def initialize(self, connection_string: str):
         # Execute a query
         try:
+            print("Platform :", sys.platform)
             self.conn = psycopg2.connect(connection_string)
-            schemas = self.sql(
-                "select string_agg(schema_name,',') from information_schema.schemata where schema_name IN ('meta','log')")
-            os.system(f"SETX DATAFORGE_PG_CONNECTION \"{connection_string}\"")
+            self.sql("select 1")  # execute test query
+            match sys.platform:
+                case 'win32' | 'cygwin':
+                    os.system(f"SETX DATAFORGE_PG_CONNECTION \"{connection_string}\"")
+                case _:
+                    os.system(f"export DATAFORGE_PG_CONNECTION=\"{connection_string}\"")
             # Change connection
-            if schemas:
-                if not confirm_action(
-                        f"All objects in schema(s) {schemas} in postgres database will be deleted. Do you want to continue?"):
-                    sys.exit(1)
-            #  Drop schemas
-            #  Deploy DB code
-            # Open the resource file in read mode
-            # with open("resources/pg_deploy.sql", "r") as file:
-                # Read the contents of the file
-            #    file_contents = file.read()
-
-            # Print or process the contents of the file
-            # print(file_contents)
             print("Please restart your console")
         except Exception as e:
             print(f"Error initializing Postgres database or insufficient permissions. Details: {e}")
             sys.exit(1)
 
+    def seed(self):
+        schemas = self.sql(
+            "select string_agg(schema_name,',') from information_schema.schemata where schema_name IN ('meta','log')")
+        if schemas:
+            if not self.confirm_action(
+                    f"All objects in schema(s) {schemas} in postgres database will be deleted. Do you want to continue (y/n)?"):
+                sys.exit(1)
+        #  Drop schemas
+        self.sql("DROP SCHEMA IF EXISTS meta CASCADE;"
+                 "DROP SCHEMA IF EXISTS log CASCADE;", fetch=False)
+        #  Deploy DB code
+        print("Initializing database..")
+        deploy_sql = files('cli.dataforge.resources').joinpath('pg_deploy.sql').read_text()
+        self.sql(deploy_sql, fetch=False)
+        print("Database initialized")
 
-def confirm_action(message: str):
-    while True:
+    @staticmethod
+    def confirm_action(message: str):
         confirmation = input(message).strip().lower()
         return confirmation in ('yes', 'y')

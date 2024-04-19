@@ -1,6 +1,0 @@
-Metadata-Version: 2.1
-Name: dataforge
-Version: 0.0.1
-Requires-Dist: pyyaml
-Requires-Dist: psycopg2-binary
-Requires-Dist: pyspark

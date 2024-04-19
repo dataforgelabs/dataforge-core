@@ -1,0 +1,15 @@
+MANIFEST.in
+README.md
+pyproject.toml
+cli/dataforge/__init__.py
+cli/dataforge/importProject.py
+cli/dataforge/main.py
+cli/dataforge/mainConfig.py
+cli/dataforge/miniSparky.py
+cli/dataforge/pg.py
+cli/dataforge_core.egg-info/PKG-INFO
+cli/dataforge_core.egg-info/SOURCES.txt
+cli/dataforge_core.egg-info/dependency_links.txt
+cli/dataforge_core.egg-info/entry_points.txt
+cli/dataforge_core.egg-info/requires.txt
+cli/dataforge_core.egg-info/top_level.txt

@@ -1,10 +1,10 @@
 import json
 import os
 import sys
+
 import yaml
 from .mainConfig import MainConfig
 from .miniSparky import MiniSparky
-
 
 
 class ImportProject:
@@ -18,11 +18,29 @@ class ImportProject:
         self.import_id = int(_import_id)
         print('Started import with id ', self.import_id)
 
-    def load(self):
-        self.start()
-        with os.scandir(self._config.args.source) as entries:
+    def validate(self):
+        print(f"Validating project path {self._config.source_path}")
+        meta_flag = False
+        source_flag = False
+        with os.scandir(self._config.source_path) as entries:
             for file in entries:
-                if file.is_dir():
+                if file.is_dir() and file.name == 'sources':
+                    source_flag = True
+                elif file.name == "meta.yaml":
+                    meta_flag = True
+        if not meta_flag:
+            print(f"Missing meta.yaml in project path {self._config.source_path}")
+            sys.exit(1)
+        if not source_flag:
+            print(f"Missing sources folder in project path {self._config.source_path}")
+            sys.exit(1)
+
+    def load(self):
+        self.validate()
+        self.start()
+        with os.scandir(self._config.source_path) as entries:
+            for file in entries:
+                if file.is_dir() and file.name in ('sources', 'outputs'):
                     self.list_files(file.path, file.name)
                 elif file.name.endswith(".yaml"):
                     self.load_file(file.path, file.name)
@@ -37,7 +55,6 @@ class ImportProject:
         self.write_log()
         self.write_queries("source")
         self.write_queries("output")
-
 
     def list_files(self, path: str, folder_name: str):
         print("Importing files..")
@@ -58,6 +75,7 @@ class ImportProject:
         self.ms = MiniSparky(self._config)
         self.test_expressions_recursive(exps)
         self.ms.stop()
+        del self.ms
 
     def test_expressions_recursive(self, test_expressions, recursion_level=0):
         try:
@@ -70,7 +88,7 @@ class ImportProject:
             #  update test results
             test_results_str = json.dumps(test_results)
             res = self._config.pg.sql("SELECT meta.impc_update_test_results(%s, %s)",
-                                            (self.import_id, test_results_str))
+                                      (self.import_id, test_results_str))
             if res.get('error'):
                 self.fail_import('Invalid expression detected. See log file for details')
             if recursion_level > 20:
@@ -96,6 +114,8 @@ class ImportProject:
 
     def write_queries(self, out_type: str):
         queries = self._config.pg.sql(f"select meta.svcc_get_{out_type}_queries(%s)", [self.import_id])
+        if not queries:
+            return
         if out_type == "source":
             out_path = self._config.output_source_path
         elif out_type == "output":
