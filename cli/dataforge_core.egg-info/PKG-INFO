@@ -1,0 +1,15 @@
+Metadata-Version: 2.1
+Name: dataforge-core
+Version: 0.1.0
+Summary: Command line compiler for dataforge core projects
+Author-email: Vadim Orlov <vorlov@dataforgelabs.com>
+Project-URL: Homepage, https://github.com/dataforgelabs/dataforge-core
+Project-URL: Issues, https://github.com/dataforgelabs/dataforge-core/issues
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+Requires-Dist: pyyaml
+Requires-Dist: psycopg2-binary
+Requires-Dist: pyspark
+Requires-Dist: importlib_resources
+
+# dfCore

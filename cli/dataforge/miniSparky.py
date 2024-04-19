@@ -9,14 +9,13 @@ class MiniSparky:
         self.spark = SparkSession.builder \
             .appName("dfCore") \
             .master("local[1]") \
-            .config("spark.driver.extraJavaOptions", "-Dlog4j.rootLogger.level=OFF") \
-            .config("spark.executor.extraJavaOptions", "-Dlog4j.rootLogger.level=OFF") \
-            .config("spark.log.level", "OFF") \
+            .config("spark.driver.extraJavaOptions", "-Dlog4j.logger.level=FATAL") \
+            .config("spark.executor.extraJavaOptions", "-Dlog4j.logger.level=FATAL") \
+            .config("spark.log.level", "FATAL") \
             .config("spark.driver.memory", "512m") \
             .config("spark.executor.memory", "512m") \
             .config("spark.executor.cores", "1") \
             .config("spark.ui.enabled", "false") \
-            .config("spark.driver.host", "localhost") \
             .getOrCreate()
 
         self.spark.sql(
@@ -79,5 +78,6 @@ class MiniSparky:
             }
 
     def stop(self):
-        self.spark.stop()
+        self.spark.sparkContext.stop()
+        del self.spark
 

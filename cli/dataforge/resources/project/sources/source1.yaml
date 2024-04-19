@@ -1,0 +1,12 @@
+---
+source_name: "source1"
+source_table: "schema.table"
+raw_attributes:
+- product_id int
+- name string
+- qty int
+- price decimal
+- amount decimal
+rules:
+- name: amount
+  expression: "[This].qty * [This].price"

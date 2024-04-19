@@ -2,15 +2,27 @@
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 [project]
-name = "dataforge"
-version = "0.0.1"
+name = "dataforge-core"
+version = "0.1.0"
+authors = [
+    {name="Vadim Orlov", email="vorlov@dataforgelabs.com"}
+]
+description = "Command line compiler for dataforge core projects"
+readme = "README.md"
+requires-python = ">=3.12"
 dependencies = [
     "pyyaml",
     "psycopg2-binary",
-    "pyspark"
+    "pyspark",
+    "importlib_resources"
     ]
 [tool.setuptools.packages.find]
 # All the following settings are optional:
-where = ["src"]  # ["."] by default
+where = ["cli"]  # ["."] by default
+[tool.setuptools.package-data]
+dataforge = ["*.txt", "*.yaml", "*.sql"]
 [project.scripts]
 dataforge = "dataforge.main:main"
+[project.urls]
+Homepage = "https://github.com/dataforgelabs/dataforge-core"
+Issues = "https://github.com/dataforgelabs/dataforge-core/issues"
