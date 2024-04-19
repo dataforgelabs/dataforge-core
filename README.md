@@ -4,6 +4,8 @@
 
 - Download and install Python version 3.12+ from https://www.python.org/downloads/
 - Install Dataforge by running: 
+  - pip install dataforge-core
+- Install beta 
   - pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ dataforge-core
   
 ## Usage
