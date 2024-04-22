@@ -16,7 +16,7 @@ jobs:
       - name: Run a script
         run: ./build.sh
       - name: Move file
-        run: mv database/pg_deploy.sql cli/dataforge/resources/
+        run: mv pg_deploy.sql cli/dataforge/resources/
       - name: Get pgdeploy file
         uses: actions/upload-artifact@v4
         with:
