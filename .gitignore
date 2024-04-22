@@ -1,6 +1,7 @@
 dist/
 __pycache__/
-/.idea
-/.idea_modules
+.idea/
+.idea_modules/
 .venv/
 cli/dataforge_core.egg-info/
+bitbucket-pipelines.yml
