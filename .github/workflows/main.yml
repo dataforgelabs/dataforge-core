@@ -15,14 +15,14 @@ jobs:
         run: chmod +x build.sh
       - name: Run a script
         run: ./build.sh
-      - name: Move file
-        run: mv pg_deploy.sql ../cli/dataforge/resources/
-      - name: Get pgdeploy file
+      - name: Save pgdeploy file
         uses: actions/upload-artifact@v4
         with:
           name: pgdeploy
           path: ./database/pg_deploy.sql
-      - name: Commit files
+      - name: Move file
+        run: mv pg_deploy.sql ../cli/dataforge/resources/
+      - name: Commit file
         id: commit
         run: |
           git config --local user.email "action@github.com"
