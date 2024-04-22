@@ -1,0 +1,17 @@
+name: Build pg-deploy
+
+on: [push]
+
+jobs:
+  run-build-sh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository to the runner
+        uses: actions/checkout@v4  
+      - name: Run a script
+        run: ./database/build.sh
+      - name: Get pgdeploy file
+        uses: actions/upload-artifact@v4
+        with:
+          name: pgdeploy
+          path: database/pg_deploy.sql
