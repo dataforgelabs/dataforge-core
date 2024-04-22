@@ -3,6 +3,8 @@ import sys
 import psycopg2
 from importlib_resources import files
 
+from .util import confirm_action, save_os_variable
+
 
 class Pg:
     def __init__(self, connection_string: str = None, initialize=False):
@@ -13,7 +15,7 @@ class Pg:
                 conn_string = os.environ.get('DATAFORGE_PG_CONNECTION')
                 print(f"Connecting to Postgres..")
                 if conn_string is None:
-                    print("Postgres connection is not initialized. Run with --mode init")
+                    print("Postgres connection is not initialized. Run dataforge --connect \"pg_connection\"")
                     sys.exit(1)
                 self.conn = psycopg2.connect(conn_string)
                 self.conn.set_session(autocommit=True)
@@ -37,13 +39,8 @@ class Pg:
             print("Platform :", sys.platform)
             self.conn = psycopg2.connect(connection_string)
             self.sql("select 1")  # execute test query
-            match sys.platform:
-                case 'win32' | 'cygwin':
-                    os.system(f"SETX DATAFORGE_PG_CONNECTION \"{connection_string}\"")
-                case _:
-                    os.system(f"export DATAFORGE_PG_CONNECTION=\"{connection_string}\"")
+            save_os_variable('DATAFORGE_PG_CONNECTION', connection_string)
             # Change connection
-            print("Please restart your console")
         except Exception as e:
             print(f"Error initializing Postgres database or insufficient permissions. Details: {e}")
             sys.exit(1)
@@ -52,7 +49,7 @@ class Pg:
         schemas = self.sql(
             "select string_agg(schema_name,',') from information_schema.schemata where schema_name IN ('meta','log')")
         if schemas:
-            if not self.confirm_action(
+            if not confirm_action(
                     f"All objects in schema(s) {schemas} in postgres database will be deleted. Do you want to continue (y/n)?"):
                 sys.exit(1)
         #  Drop schemas
@@ -64,7 +61,4 @@ class Pg:
         self.sql(deploy_sql, fetch=False)
         print("Database initialized")
 
-    @staticmethod
-    def confirm_action(message: str):
-        confirmation = input(message).strip().lower()
-        return confirmation in ('yes', 'y')
+

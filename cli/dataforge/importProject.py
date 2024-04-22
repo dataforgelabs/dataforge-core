@@ -1,10 +1,12 @@
 import json
 import os
 import sys
-
 import yaml
+
+from .databricks_sql import run
 from .mainConfig import MainConfig
 from .miniSparky import MiniSparky
+from sql_formatter.core import format_sql
 
 
 class ImportProject:
@@ -47,14 +49,13 @@ class ImportProject:
         self._config.pg.sql("SELECT meta.svc_import_complete(%s, 'I')", [self.import_id])
         self._config.pg.sql("SELECT meta.imp_parse_objects(%s)", [self.import_id])
         print("Files parsed")
-        self._config.pg.sql("SELECT meta.svc_import_execute(%s)", [self.import_id])
+        if not self._config.pg.sql("SELECT meta.svc_import_execute(%s)", [self.import_id]):
+            self.fail_import('See log file for details')
         print("Objects loaded")
         self.test_expressions()
-        print("Expressions validated")
-        print("Import completed successfully")
         self.write_log()
-        self.write_queries("source")
-        self.write_queries("output")
+        self.write_queries()
+        print("Import completed successfully")
 
     def list_files(self, path: str, folder_name: str):
         print("Importing files..")
@@ -94,6 +95,9 @@ class ImportProject:
             if recursion_level > 20:
                 self.fail_import('Maximum recursion exceeded while testing expressions. Check error logs and '
                                  'expression test tables for more details')
+            if res.get('complete'):
+                print("Expressions validated")
+                return
             if len(res['next']) > 0:
                 self.test_expressions_recursive(res['next'], recursion_level + 1)
         except Exception as e:
@@ -112,17 +116,29 @@ class ImportProject:
             # Write the string to the file
             file.write(log_file)
 
-    def write_queries(self, out_type: str):
-        queries = self._config.pg.sql(f"select meta.svcc_get_{out_type}_queries(%s)", [self.import_id])
+    def write_queries(self):
+        queries = self._config.pg.sql(f"select meta.svc_generate_queries(%s)", [self.import_id])
         if not queries:
-            return
-        if out_type == "source":
-            out_path = self._config.output_source_path
-        elif out_type == "output":
-            out_path = self._config.output_output_path
-        for query in queries:
-            file_name = os.path.join(out_path, query['file_name'])
+            self.fail_import('Error generating querie. See log for details')
+        if queries.get('error'):
+            self.fail_import(queries['error'])
+        for query in queries['source']:
+            file_name = os.path.join(self._config.output_source_path, query['file_name'])
             with open(file_name, "w") as file:
                 # Write the string to the file
-                file.write(query['query'])
-        print(f"Generated {len(queries)} {out_type} queries")
+                file.write(format_sql(query['query']))
+        print(f"Generated {len(queries['source'])} source queries")
+        for query in queries['output']:
+            file_name = os.path.join(self._config.output_output_path, query['file_name'])
+            with open(file_name, "w") as file:
+                # Write the string to the file
+                file.write(format_sql(query['query']))
+        print(f"Generated {len(queries['output'])} output queries")
+
+        run_file_name = os.path.join(self._config.output_path, 'run.sql')
+        with open(run_file_name, "w") as file:
+            # Write combined run file
+            file.write(format_sql(queries['run']))
+        print("Generated run.sql")
+        if self._config.run_flag:
+            run(queries['run'])

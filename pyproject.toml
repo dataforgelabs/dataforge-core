@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 [project]
 name = "dataforge-core"
-version = "0.1.2"
+version = "0.1.3"
 authors = [
     {name="Vadim Orlov", email="vorlov@dataforgelabs.com"}
 ]
@@ -14,7 +14,9 @@ dependencies = [
     "pyyaml",
     "psycopg2-binary",
     "pyspark",
-    "importlib_resources"
+    "importlib_resources",
+    "databricks-sql-connector",
+    "sql-formatter"
     ]
 [tool.setuptools.packages.find]
 # All the following settings are optional:

@@ -1,4 +1,4 @@
---Built: Mon Apr 22 19:24:30 UTC 2024
+--Built: Mon Apr 22 15:45:53 PDT 2024
 CREATE SCHEMA IF NOT EXISTS meta;
 CREATE SCHEMA IF NOT EXISTS log;
 DO $$
@@ -1257,6 +1257,7 @@ IF v_next::text = '[]' THEN
     INSERT INTO log.actor_log (log_id, message, actor_path, severity, insert_datetime)
         VALUES ( v_imp.log_id, 'Expressions validated, Import completed successfully. ','impc_execute', 'I', clock_timestamp());
     UPDATE meta.import SET status_code = 'P' WHERE import_id = v_imp.import_id;   
+    RETURN json_build_object('complete',true);
 END IF;
 
 RETURN json_build_object('next',v_next);
@@ -1567,13 +1568,13 @@ DECLARE
 	v_body jsonb;
 BEGIN
 
+IF in_o.body->>'table_name' IS NULL THEN
+	RETURN jsonb_build_object('error', 'table_name is undefined');
+END IF;
+
 v_body := in_o.body || 
 	jsonb_build_object('output_package_parameters',jsonb_build_object('table_name', COALESCE(in_o.body->>'table_name',in_o.name),
-																	  'table_schema', COALESCE(in_o.body->>'schema_name','')) ) ;
-
-IF v_body->'error' IS NOT NULL THEN
-	RETURN v_body;
-END IF;
+																	  'table_schema', in_o.body->>'schema_name') ) ;
 
 IF v_id IS NULL THEN
 	INSERT INTO meta.output(output_type ,output_name ,active_flag ,created_userid ,create_datetime ,output_package_parameters ,retention_parameters ,output_description ,output_sub_type,
@@ -1726,7 +1727,7 @@ BEGIN
         SELECT j.relation_name, j.source_id, j.related_source_id, j.expression, j.source_cardinality, j.related_source_cardinality, j.expression_parsed, 
         COALESCE(j.active_flag, true) active_flag, j.description, COALESCE(j.primary_flag, true) primary_flag, el rel, rel_js->'error' error
         FROM meta.import_object o 
-        CROSS JOIN jsonb_array_elements(o.body) el
+        CROSS JOIN jsonb_array_elements(COALESCE(NULLIF(o.body,'null'),'[]'::jsonb)) el
         CROSS JOIN meta.imp_decode_relation(el,in_imp.project_id) rel_js
         CROSS JOIN jsonb_populate_record(null::meta.source_relation, rel_js) j
         WHERE o.object_type = 'relations' AND o.import_id = in_imp.import_id
@@ -1834,12 +1835,13 @@ DECLARE
 	v_body jsonb;
 BEGIN
 
-v_hub_view_name :=  COALESCE(v_body->>'target_table_name',in_o.name); 
-v_body := in_o.body || jsonb_build_object('ingestion_parameters',jsonb_build_object('source_query', in_o.body->>'source_query'));
-
-IF v_body->'error' IS NOT NULL THEN
-	RETURN v_body;
+IF in_o.body->>'source_table' IS NULL THEN
+	RETURN jsonb_build_object('error', 'source_table is undefined');
 END IF;
+
+v_hub_view_name :=  COALESCE(in_o.body->>'target_table',in_o.name); 
+v_body := in_o.body || jsonb_build_object('ingestion_parameters',jsonb_build_object('source_query', in_o.body->>'source_query',
+		'source_table', in_o.body->>'source_table'));
 
 IF in_o.id IS NULL THEN
 	INSERT INTO meta.source(source_name ,source_description ,active_flag , ingestion_parameters, create_datetime, created_userid, parsing_parameters ,cdc_refresh_parameters ,alert_parameters ,file_type ,refresh_type ,
@@ -1915,7 +1917,114 @@ BEGIN
 		
 END;
 
-$BODY$;CREATE OR REPLACE FUNCTION meta.svc_import_complete(in_import_id int, in_status_code char(1), in_err text = null)
+$BODY$;CREATE OR REPLACE FUNCTION meta.svc_generate_queries(in_import_id int)
+ RETURNS json 
+ LANGUAGE plpgsql
+AS $function$
+
+DECLARE
+    v_imp meta.import;
+    v_source_queries json;
+    v_output_queries json;
+	v_level int;
+	v_count int;
+	v_err json;
+	v_all_source_query text;
+	v_all_output_query text;
+BEGIN
+    SELECT * INTO v_imp FROM meta.import WHERE import_id = in_import_id;
+
+	CREATE TEMP TABLE _sources ON COMMIT DROP AS
+	SELECT s.source_id, s.source_name, 0 as level , null::text file_name , null::text query
+	FROM meta.source s
+	WHERE s.project_id = v_imp.project_id AND
+	NOT EXISTS(SELECT 1 FROM meta.enrichment e JOIN meta.enrichment_parameter ep ON e.enrichment_id = ep.parent_enrichment_id
+					WHERE e.source_id = s.source_id AND ep.source_id <> s.source_id);
+
+
+	FOR v_level IN 1..20 LOOP
+		INSERT INTO _sources (source_id, source_name, level)
+		SELECT s.source_id, s.source_name, v_level
+		FROM meta.source s
+		WHERE s.project_id = v_imp.project_id AND
+		s.source_id NOT IN (SELECT source_id FROM _sources) AND
+		NOT EXISTS(SELECT 1 
+			FROM meta.enrichment e 
+			JOIN meta.enrichment_parameter ep ON e.enrichment_id = ep.parent_enrichment_id
+			JOIN meta.source_relation sr ON sr.source_relation_id = ANY(ep.source_relation_ids)
+			WHERE e.source_id = s.source_id 
+			AND s.source_id NOT IN (sr.source_id, sr.related_source_id) 
+			AND	NOT EXISTS(SELECT 1 FROM _sources _s WHERE _s.source_id = sr.source_id) 
+			AND	NOT EXISTS(SELECT 1 FROM _sources _s WHERE _s.source_id = sr.related_source_id) 
+		);
+		GET DIAGNOSTICS v_count = ROW_COUNT;
+		EXIT WHEN v_count = 0;
+	END LOOP;
+
+	SELECT json_agg(s.source_name) 
+	INTO v_err
+	FROM meta.source s
+	WHERE s.project_id = v_imp.project_id 
+	AND s.source_id NOT IN (SELECT source_id FROM _sources);
+
+	IF v_err IS NOT NULL THEN
+		RETURN json_build_object('error',format('Circular dependencies in sources %s. Please check rules to ensure that 2 sources do not have lookups pointing to each other',v_err));
+	END IF;
+
+	-- clean file names
+	UPDATE _sources s
+	SET file_name = lower(regexp_replace(left(s.source_name,245),'["<>:\/\\|?*]','_','g')),
+		query = meta.u_enr_query_generate_query(s.source_id);
+
+	WITH w AS (
+		SELECT s.source_id, ROW_NUMBER() OVER (PARTITION BY s.file_name ORDER BY s.source_id) rn
+	    FROM _sources s
+	)
+	UPDATE _sources s
+	SET file_name = file_name || '_' || w.rn
+	FROM w
+	WHERE w.source_id = s.source_id AND w.rn > 1;
+
+	SELECT json_agg(json_build_object('file_name', file_name || '.sql', 'query', query ))
+	INTO v_source_queries
+	FROM _sources;
+
+	SELECT string_agg(query,E'\n\n' ORDER BY level)
+	INTO v_all_source_query
+	FROM _sources;
+
+	CREATE TEMP TABLE _outputs ON COMMIT DROP AS
+	SELECT o.output_id, o.output_name, 0 as level , null::text file_name , null::text query
+	FROM meta.output o WHERE o.project_id = v_imp.project_id;
+
+	-- clean file names
+	UPDATE _outputs o
+	SET file_name = lower(regexp_replace(left(o.output_name,245),'["<>:\/\\|?*]','_','g')),
+	query = meta.u_output_generate_query(o.output_id);
+
+	WITH w AS (
+		SELECT o.output_id, ROW_NUMBER() OVER (PARTITION BY o.file_name ORDER BY o.output_id) rn
+	    FROM _outputs o
+	)
+	UPDATE _outputs o
+	SET file_name = file_name || '_' || w.rn
+	FROM w
+	WHERE w.output_id = o.output_id AND w.rn > 1;
+
+	SELECT json_agg(json_build_object('file_name', file_name || '.sql', 'query', query))
+	INTO v_output_queries
+	FROM _outputs;
+
+	SELECT string_agg(query,E'\n\n' ORDER BY level)
+	INTO v_all_output_query
+	FROM _outputs;
+
+	RETURN json_build_object('source', v_source_queries, 'output',v_output_queries, 'run', E'/*SOURCES*/\n' || v_all_source_query || E'\n/*OUTPUTs*/\n' || v_all_output_query);
+
+
+END;
+
+$function$;CREATE OR REPLACE FUNCTION meta.svc_import_complete(in_import_id int, in_status_code char(1), in_err text = null)
     RETURNS void
     LANGUAGE plpgsql
 AS
@@ -2027,7 +2136,7 @@ BEGIN
         (in_import_id, in_path, v_object_type, in_body);
     ELSE
         INSERT INTO log.actor_log (log_id, message, actor_path, severity, insert_datetime)
-        SELECT i.log_id, format('Skipped unklnown object %s. Please check you project',in_path), 'svc_import_restart', 'W', now()
+        SELECT i.log_id, format('Skipped unknown object %s. Please check you project',in_path), 'svc_import_restart', 'W', now()
         FROM meta.import i WHERE i.import_id = in_import_id;
     END IF;
 
@@ -2525,68 +2634,6 @@ RETURN (
 );
 
 END;
-$function$;CREATE OR REPLACE FUNCTION meta.svcc_get_output_queries(in_import_id int)
- RETURNS json 
- LANGUAGE plpgsql
-AS $function$
-
-DECLARE
-    v_imp meta.import;
-    v_ret json;
-BEGIN
-    SELECT * INTO v_imp FROM meta.import WHERE import_id = in_import_id;
-
-	-- clean file names
-	WITH rgx AS (
-        SELECT o.output_id, lower(regexp_replace(left(o.output_name,245),'["<>:\/\\|?*]','_','g')) name_reg
-        FROM meta.output o WHERE o.project_id = v_imp.project_id
-    ),
-	 rwn AS (
-		SELECT r.output_id, r.name_reg, ROW_NUMBER() OVER (PARTITION BY r.name_reg ORDER BY r.output_id) rn
-	    FROM rgx r
-	)
-	SELECT json_agg(json_build_object('file_name', CASE WHEN w.rn > 1 THEN w.name_reg || '_' || w.rn ELSE w.name_reg END || '.sql', 
-	 'query', meta.u_output_generate_query(w.output_id) ))
-	INTO v_ret
-	FROM rwn w;
-
-
-	RETURN v_ret;
-
-
-END;
-
-$function$;CREATE OR REPLACE FUNCTION meta.svcc_get_source_queries(in_import_id int)
- RETURNS json 
- LANGUAGE plpgsql
-AS $function$
-
-DECLARE
-    v_imp meta.import;
-    v_ret json;
-BEGIN
-    SELECT * INTO v_imp FROM meta.import WHERE import_id = in_import_id;
-
-	-- clean file names
-	WITH rgx AS (
-        SELECT s.source_id, lower(regexp_replace(left(s.source_name,245),'["<>:\/\\|?*]','_','g')) name_reg
-        FROM meta.source s WHERE s.project_id = v_imp.project_id
-    ),
-	 rwn AS (
-		SELECT r.source_id, r.name_reg, ROW_NUMBER() OVER (PARTITION BY r.name_reg ORDER BY r.source_id) rn
-	    FROM rgx r
-	)
-	SELECT json_agg(json_build_object('file_name', CASE WHEN w.rn > 1 THEN w.name_reg || '_' || w.rn ELSE w.name_reg END || '.sql', 
-	 'query', meta.u_enr_query_generate_query(w.source_id) ))
-	INTO v_ret
-	FROM rwn w;
-
-
-	RETURN v_ret;
-
-
-END;
-
 $function$;-- for each key in in_object, replaces if with value form a matching key in in_add_object if it's not null. Runs recursively for jsonb keys
 CREATE OR REPLACE FUNCTION meta.u_append_object(in_object jsonb, in_add_object jsonb)
     RETURNS jsonb
@@ -3354,6 +3401,23 @@ RETURN (SELECT project_id FROM meta.source WHERE source_id = in_source_id);
 END;
 
 $function$;
+
+CREATE OR REPLACE FUNCTION meta.u_get_source_table_name(in_source_id int)
+ RETURNS text
+ LANGUAGE plpgsql
+AS $function$
+
+BEGIN
+	
+RETURN COALESCE(
+		(SELECT s.ingestion_parameters->>'source_table' 
+			FROM meta.source s WHERE s.source_id = in_source_id),
+		format('Undefined source table for source `%s`', meta.u_get_source_name(in_source_id))
+	);
+
+END;
+
+$function$;
 -- lookup complex attribute in source, then lookup key and return it's datatype or error
 CREATE OR REPLACE FUNCTION meta.u_get_struct_key_datatype(in_datatype_schema jsonb, in_keys text)
     RETURNS jsonb
@@ -3673,13 +3737,18 @@ DECLARE
     v_output_subtype text;
     v_error text;
     v_output_source_ids int[];
+    v_output_table text;
+    v_output_schema text;
+    v_output_full_table text;
 
 BEGIN
 
-SELECT o.output_type, o.output_id, o.output_sub_type
-INTO v_output_type, v_output_id, v_output_subtype
+SELECT o.output_type, o.output_id, o.output_sub_type, o.output_package_parameters->>'schema_name', output_package_parameters->>'table_name' 
+INTO v_output_type, v_output_id, v_output_subtype, v_output_schema, v_output_table
 FROM meta.output o 
 WHERE o.output_id = in_output_id;
+
+v_output_full_table := COALESCE(v_output_schema || '.', '') || v_output_table;
 
 SELECT array_agg(os.output_source_id) INTO v_output_source_ids
 FROM meta.output_source os WHERE os.output_id = in_output_id;
@@ -3782,7 +3851,9 @@ END IF;
 
     END LOOP;
 
-    v_query := array_to_string(v_queries, ' UNION ALL ');
+    v_query := 'DROP TABLE IF EXISTS ' || v_output_full_table || ';
+    CREATE TABLE ' || v_output_full_table || ' AS 
+    ' || array_to_string(v_queries, ' UNION ALL ');
     RETURN v_query;
 
 EXCEPTION WHEN OTHERS THEN
@@ -5275,7 +5346,7 @@ CREATE OR REPLACE FUNCTION meta.u_enr_query_generate_distinct_many_join_query(in
     
  RETURNS text
  LANGUAGE plpgsql
- COST 100
+
 AS $function$
 DECLARE
 v_sql text := '';
@@ -5296,7 +5367,7 @@ FOR v_el IN
         v_sql := CASE WHEN v_sql = '' THEN '' ELSE v_sql || E',\n' END;
         -- DISTINCT query
         v_sql := v_sql || v_el.alias || '_DIST AS (SELECT DISTINCT ' || array_to_string(v_el.many_join_list,',') || 
-        ' FROM ' || CASE WHEN in_cte = 0 THEN 'input' ELSE 'cte' || (in_cte - 1) END || '),
+        ' FROM ' || CASE WHEN in_cte = 0 THEN meta.u_get_source_table_name(in_source_id) ELSE 'cte' || (in_cte - 1) END || '),
         ';
         
         -- Aggregate query
@@ -5469,7 +5540,7 @@ FOR v_cte IN 0 .. v_cte_max LOOP
         v_sql := v_sql || COALESCE((SELECT string_agg( e.expression || 
         CASE WHEN e.expression = 'T.' || e.alias THEN '' ELSE ' ' || e.alias END,', ') 
         FROM elements e WHERE e.type IN ('raw','system') AND cte = 0), '');
-
+        RAISE DEBUG 'Added raw attributes';
     ELSEIF v_cte = v_cte_max AND in_mode = 'input' THEN
         DELETE FROM elements WHERE type = 'system' AND alias = 's_input_id';
     END IF;
@@ -5491,7 +5562,7 @@ FOR v_cte IN 0 .. v_cte_max LOOP
         CASE WHEN e.expression = 'T.' || e.alias THEN '' ELSE e.alias END ,', ') 
     FROM elements e WHERE e.type = 'enrichment' AND e.cte = v_cte),'');
     -- add FROM clause
-    v_sql := v_sql || E'\nFROM ' || CASE WHEN v_cte = 0 THEN 'input' ELSE 'cte' || (v_cte - 1) END
+    v_sql := v_sql || E'\nFROM ' || CASE WHEN v_cte = 0 THEN meta.u_get_source_table_name(in_source_id) ELSE 'cte' || (v_cte - 1) END
         || ' T';
    -- Add current CTE joins
     v_sql := v_sql || COALESCE((SELECT  string_agg( E'\nLEFT JOIN ' || CASE WHEN in_source_id = e.source_id AND v_cte > 0 THEN 'cte' || (v_cte - 1) -- self-join
@@ -5510,12 +5581,6 @@ FOR v_cte IN 0 .. v_cte_max LOOP
 
 END LOOP;
 
-/*
-v_sql := v_sql || ')' || E'\nSELECT ';
-v_sql := v_sql || COALESCE((SELECT string_agg('T.' || e.alias ,', ') 
-FROM elements e WHERE e.type IN ('raw','system','enrichment')),'');
-v_sql := v_sql || E'\nFROM cte' || v_cte_max;
-*/
 
 RETURN v_sql;
     
@@ -5532,8 +5597,15 @@ CREATE OR REPLACE FUNCTION meta.u_enr_query_generate_query(in_source_id int)
  LANGUAGE plpgsql
 AS $function$
 
+DECLARE
+    v_hub_table_name text = meta.u_get_hub_table_name(in_source_id);
+    v_sql text;
 BEGIN
-    RETURN meta.u_enr_query_generate_query(in_source_id, 'input', 0, '{}'::int[]);
+    v_sql := 'DROP TABLE IF EXISTS ' || v_hub_table_name || E';
+    CREATE TABLE ' || v_hub_table_name || ' AS 
+    ' || meta.u_enr_query_generate_query(in_source_id, 'input', 0, '{}'::int[]) ||  ';
+    ';
+    RETURN v_sql;
 END;
 
 $function$;DROP FUNCTION IF EXISTS meta.u_enr_query_generate_sub_query( int,  text);

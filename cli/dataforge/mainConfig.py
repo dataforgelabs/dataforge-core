@@ -3,7 +3,9 @@ import os
 import shutil
 import sys
 import traceback
-from types import ModuleType
+
+from .databricks_sql import init_databricks
+from .util import confirm_action, save_os_variable
 
 from importlib_resources.abc import Traversable
 from .pg import Pg
@@ -18,14 +20,22 @@ class MainConfig:
             sys.exit(1)
         # parse command line args
         _parser = argparse.ArgumentParser(
-            prog='dataforge core',
-            description='Dataforge Core compiles project and generates source and output SQL queries',
+            prog='dataforge',
+            description='Dataforge Core compiles project and generates SQL queries that create source and output tables defined in the project',
             epilog='Try our cloud product')
         _parser.add_argument('source', type=str, help='Project folder', metavar='<Project Path>', nargs='?')
         _parser.add_argument('--init', '-i', action='store_true', help='Initialize project folder')
         _parser.add_argument('--seed', action='store_true', help='Deploy and seed postgres database')
         _parser.add_argument('--connect', '-c', type=str, help='Connect to postgres database',
                              metavar='<Postgres connection string>')
+        _parser.add_argument('--connect_databricks', '-d', type=str, help='Connect to databricks SQL warehouse',
+                             metavar='<Databricks host URL>')
+        _parser.add_argument('--http_path', type=str, help='Databricks SQL warehouse http path',
+                             metavar='<Databricks SQL warehouse http path>')
+        _parser.add_argument('--access_token', type=str, help='Databricks access token',
+                             metavar='<Databricks SQL warehouse access token>')
+        _parser.add_argument('--run', '-r', action='store_true',
+                             help='Execute compiled project using configured Databricks SQL warehouse connection')
 
         args = _parser.parse_args()
         if args.connect:
@@ -36,10 +46,12 @@ class MainConfig:
             self.pg = Pg()
         if args.seed:
             self.pg.seed()
+        if args.connect_databricks:
+            init_databricks(args)
         self.source_path = os.getcwd() if args.source is None else args.source
         if args.init:
             try:
-                if self.pg.confirm_action(f"All files and subfolders in {self.source_path} will be deleted. Continue (y/n)? "):
+                if confirm_action(f"All files and subfolders in {self.source_path} will be deleted. Continue (y/n)? "):
                     shutil.rmtree(self.source_path, ignore_errors=True)
                     os.makedirs(self.source_path)
                     self.traverse_resource_dir(importlib_resources.files().joinpath('resources', 'project'))
@@ -48,6 +60,7 @@ class MainConfig:
                 traceback.print_stack()
                 print(f"Error initializing project in {self.source_path} : {e}")
             sys.exit(0)
+        self.run_flag = args.run
         self.output_path = os.path.join(self.source_path, 'target')
         self.log_path = os.path.join(self.output_path, 'log.txt')
         shutil.rmtree(self.output_path, ignore_errors=True)
