@@ -1,6 +1,9 @@
 name: Build pg-deploy
 
-on: [push]
+on:
+  push:
+    paths:
+      - database/**
 
 jobs:
   run-build-sh:
