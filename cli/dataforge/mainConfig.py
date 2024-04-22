@@ -22,7 +22,7 @@ class MainConfig:
         _parser = argparse.ArgumentParser(
             prog='dataforge',
             description='Dataforge Core compiles project and generates SQL queries that create source and output tables defined in the project',
-            epilog='Try our cloud product')
+            epilog='https://github.com/dataforgelabs/dataforge-core')
         _parser.add_argument('source', type=str, help='Project folder', metavar='<Project Path>', nargs='?')
         _parser.add_argument('--init', '-i', action='store_true', help='Initialize project folder')
         _parser.add_argument('--seed', action='store_true', help='Deploy and seed postgres database')
