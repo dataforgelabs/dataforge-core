@@ -19,4 +19,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pgdeploy
-          path: pg_deploy.sql
+          path: ./database/pg_deploy.sql
