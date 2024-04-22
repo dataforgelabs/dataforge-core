@@ -1,4 +1,0 @@
-pyyaml
-psycopg2-binary
-pyspark
-importlib_resources
