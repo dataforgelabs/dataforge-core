@@ -5,15 +5,18 @@ on: [push]
 jobs:
   run-build-sh:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./database
     steps:
       - name: Check out the repository to the runner
         uses: actions/checkout@v4  
       - name: Make the script files executable
-        run: chmod +x database/build.sh
+        run: chmod +x build.sh
       - name: Run a script
-        run: ./database/build.sh
+        run: ./build.sh
       - name: Get pgdeploy file
         uses: actions/upload-artifact@v4
         with:
           name: pgdeploy
-          path: database/pg_deploy.sql
+          path: pg_deploy.sql
