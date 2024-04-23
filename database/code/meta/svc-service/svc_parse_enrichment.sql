@@ -288,7 +288,8 @@ RAISE DEBUG 'Parsed % aggregates',(SELECT COUNT(1) FROM  _aggs_parsed);
                             IF EXISTS(SELECT 1 FROM json_array_elements(v_next_relation_path->'path') h
                                         WHERE json_array_length(h->'selections') > 1)
                                 THEN 
-                                    RETURN json_build_object('error', format('Multiple relation paths exist for source %s. Specify desired path in rule parameters.',v_source_name));
+                                    RETURN json_build_object('error', format('Multiple relation paths exist for source %s. Specify desired path in rule parameters.',v_source_name),
+                                    'details', v_next_relation_path);
                             END IF;			
                         END IF;			
 
