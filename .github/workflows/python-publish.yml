@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
 
     environment:
-      name: ${{ github.ref_name }}
+      name: ${{ github.ref }}
       url: ${{ vars.PYPI_URL }}
       
     permissions:
