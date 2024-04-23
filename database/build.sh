@@ -1,5 +1,5 @@
 #!/bin/bash
-##please do not leave any /r characters in this file!
+##please do not leave any /r characters in this file!!
 # Build Core
 pgdeploy="$(pwd)/pg_deploy.sql"
 echo $pgdeploy
