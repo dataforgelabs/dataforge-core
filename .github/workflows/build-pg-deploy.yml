@@ -4,6 +4,9 @@ on:
   push:
     paths:
       - database/**
+    branches:
+      - main
+      - next
 
 jobs:
   run-build-sh:
