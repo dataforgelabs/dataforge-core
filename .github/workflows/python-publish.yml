@@ -25,7 +25,8 @@ jobs:
     - name: Make the script files executable
       run: chmod +x ./database/build.sh
     - name: Run a script
-      run: ./database/build.sh
+      working-directory: ./database
+      run: ./build.sh
     - name: Move file
       run: mv ./database/pg_deploy.sql ./cli/dataforge/resources/
     - name: Save pgdeploy file
