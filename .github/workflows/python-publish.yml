@@ -49,49 +49,29 @@ jobs:
       with:
         name: python-package-distributions
         path: dist/
+
+  publish-to-pypi:
+    name: publish python distribution to PyPi based on environment
+    needs:
+    - build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: ${{ github.ref_name }}
+      url: ${{ vars.PYPI_URL }}
+      
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: publish dist to PyPi
+      uses: pypa/gh-action-pypi-publish@release/v1
+      #with:
+      #  repository-url: https://test.pypi.org/legacy/
         
-  publish-to-testpypi:
-    name: publish python distribution to TestPyPi
-    needs:
-    - build
-    runs-on: ubuntu-latest
 
-    environment:
-      name: testpypi
-      url: https://test.pypi.org/p/dataforge-core
-
-    permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
-
-    steps:
-    - name: Download all the dists
-      uses: actions/download-artifact@v4
-      with:
-        name: python-package-distributions
-        path: dist/
-    - name: publish dist to TestPyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        repository-url: https://test.pypi.org/legacy/
-
-  publish-to-prodpypi:
-    name: publish python distribution to ProdPyPi
-    needs:
-    - build
-    runs-on: ubuntu-latest
-
-    environment:
-      name: prodpypi
-      url: https://pypi.org/p/dataforge-core
-
-    permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
-
-    steps:
-    - name: Download all the dists
-      uses: actions/download-artifact@v4
-      with:
-        name: python-package-distributions
-        path: dist/
-    - name: publish dist to ProdPyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
