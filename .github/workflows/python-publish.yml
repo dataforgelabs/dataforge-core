@@ -52,7 +52,7 @@ jobs:
     - name: Set environment based on branch
       id: identify
       run: | 
-        echo "git log -1 --format='%D' ${{ github.ref }} | grep -Eo '[^\/]+$'" >> $BRANCH
+        BRANCH=$(git log -1 --format='%D' ${{ github.ref }} | grep -Eo '[^\/]+$')
         echo $BRANCH
         echo "branch_name=${BRANCH}" >> $GITHUB_OUTPUT
     outputs:
