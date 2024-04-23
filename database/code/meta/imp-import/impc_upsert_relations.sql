@@ -13,7 +13,7 @@ BEGIN
         SELECT j.relation_name, j.source_id, j.related_source_id, j.expression, j.source_cardinality, j.related_source_cardinality, j.expression_parsed, 
         COALESCE(j.active_flag, true) active_flag, j.description, COALESCE(j.primary_flag, true) primary_flag, el rel, rel_js->'error' error
         FROM meta.import_object o 
-        CROSS JOIN jsonb_array_elements(o.body) el
+        CROSS JOIN jsonb_array_elements(COALESCE(NULLIF(o.body,'null'),'[]'::jsonb)) el
         CROSS JOIN meta.imp_decode_relation(el,in_imp.project_id) rel_js
         CROSS JOIN jsonb_populate_record(null::meta.source_relation, rel_js) j
         WHERE o.object_type = 'relations' AND o.import_id = in_imp.import_id
