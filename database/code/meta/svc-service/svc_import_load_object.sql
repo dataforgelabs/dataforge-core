@@ -36,7 +36,7 @@ BEGIN
         (in_import_id, in_path, v_object_type, in_body);
     ELSE
         INSERT INTO log.actor_log (log_id, message, actor_path, severity, insert_datetime)
-        SELECT i.log_id, format('Skipped unklnown object %s. Please check you project',in_path), 'svc_import_restart', 'W', now()
+        SELECT i.log_id, format('Skipped unknown object %s. Please check you project',in_path), 'svc_import_restart', 'W', now()
         FROM meta.import i WHERE i.import_id = in_import_id;
     END IF;
 

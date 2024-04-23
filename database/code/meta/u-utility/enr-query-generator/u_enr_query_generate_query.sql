@@ -50,7 +50,7 @@ FOR v_cte IN 0 .. v_cte_max LOOP
         v_sql := v_sql || COALESCE((SELECT string_agg( e.expression || 
         CASE WHEN e.expression = 'T.' || e.alias THEN '' ELSE ' ' || e.alias END,', ') 
         FROM elements e WHERE e.type IN ('raw','system') AND cte = 0), '');
-
+        RAISE DEBUG 'Added raw attributes';
     ELSEIF v_cte = v_cte_max AND in_mode = 'input' THEN
         DELETE FROM elements WHERE type = 'system' AND alias = 's_input_id';
     END IF;
@@ -72,7 +72,7 @@ FOR v_cte IN 0 .. v_cte_max LOOP
         CASE WHEN e.expression = 'T.' || e.alias THEN '' ELSE e.alias END ,', ') 
     FROM elements e WHERE e.type = 'enrichment' AND e.cte = v_cte),'');
     -- add FROM clause
-    v_sql := v_sql || E'\nFROM ' || CASE WHEN v_cte = 0 THEN 'input' ELSE 'cte' || (v_cte - 1) END
+    v_sql := v_sql || E'\nFROM ' || CASE WHEN v_cte = 0 THEN meta.u_get_source_table_name(in_source_id) ELSE 'cte' || (v_cte - 1) END
         || ' T';
    -- Add current CTE joins
     v_sql := v_sql || COALESCE((SELECT  string_agg( E'\nLEFT JOIN ' || CASE WHEN in_source_id = e.source_id AND v_cte > 0 THEN 'cte' || (v_cte - 1) -- self-join
@@ -91,12 +91,6 @@ FOR v_cte IN 0 .. v_cte_max LOOP
 
 END LOOP;
 
-/*
-v_sql := v_sql || ')' || E'\nSELECT ';
-v_sql := v_sql || COALESCE((SELECT string_agg('T.' || e.alias ,', ') 
-FROM elements e WHERE e.type IN ('raw','system','enrichment')),'');
-v_sql := v_sql || E'\nFROM cte' || v_cte_max;
-*/
 
 RETURN v_sql;
     
@@ -113,8 +107,15 @@ CREATE OR REPLACE FUNCTION meta.u_enr_query_generate_query(in_source_id int)
  LANGUAGE plpgsql
 AS $function$
 
+DECLARE
+    v_hub_table_name text = meta.u_get_hub_table_name(in_source_id);
+    v_sql text;
 BEGIN
-    RETURN meta.u_enr_query_generate_query(in_source_id, 'input', 0, '{}'::int[]);
+    v_sql := 'DROP TABLE IF EXISTS ' || v_hub_table_name || E';
+    CREATE TABLE ' || v_hub_table_name || ' AS 
+    ' || meta.u_enr_query_generate_query(in_source_id, 'input', 0, '{}'::int[]) ||  ';
+    ';
+    RETURN v_sql;
 END;
 
 $function$;

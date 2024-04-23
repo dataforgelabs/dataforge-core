@@ -107,6 +107,7 @@ IF v_next::text = '[]' THEN
     INSERT INTO log.actor_log (log_id, message, actor_path, severity, insert_datetime)
         VALUES ( v_imp.log_id, 'Expressions validated, Import completed successfully. ','impc_execute', 'I', clock_timestamp());
     UPDATE meta.import SET status_code = 'P' WHERE import_id = v_imp.import_id;   
+    RETURN json_build_object('complete',true);
 END IF;
 
 RETURN json_build_object('next',v_next);

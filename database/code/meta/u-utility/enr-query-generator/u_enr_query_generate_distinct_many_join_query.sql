@@ -3,7 +3,7 @@ CREATE OR REPLACE FUNCTION meta.u_enr_query_generate_distinct_many_join_query(in
     
  RETURNS text
  LANGUAGE plpgsql
- COST 100
+
 AS $function$
 DECLARE
 v_sql text := '';
@@ -24,7 +24,7 @@ FOR v_el IN
         v_sql := CASE WHEN v_sql = '' THEN '' ELSE v_sql || E',\n' END;
         -- DISTINCT query
         v_sql := v_sql || v_el.alias || '_DIST AS (SELECT DISTINCT ' || array_to_string(v_el.many_join_list,',') || 
-        ' FROM ' || CASE WHEN in_cte = 0 THEN 'input' ELSE 'cte' || (in_cte - 1) END || '),
+        ' FROM ' || CASE WHEN in_cte = 0 THEN meta.u_get_source_table_name(in_source_id) ELSE 'cte' || (in_cte - 1) END || '),
         ';
         
         -- Aggregate query

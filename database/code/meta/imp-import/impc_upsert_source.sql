@@ -9,12 +9,13 @@ DECLARE
 	v_body jsonb;
 BEGIN
 
-v_hub_view_name :=  COALESCE(v_body->>'target_table_name',in_o.name); 
-v_body := in_o.body || jsonb_build_object('ingestion_parameters',jsonb_build_object('source_query', in_o.body->>'source_query'));
-
-IF v_body->'error' IS NOT NULL THEN
-	RETURN v_body;
+IF in_o.body->>'source_table' IS NULL THEN
+	RETURN jsonb_build_object('error', 'source_table is undefined');
 END IF;
+
+v_hub_view_name :=  COALESCE(in_o.body->>'target_table',in_o.name); 
+v_body := in_o.body || jsonb_build_object('ingestion_parameters',jsonb_build_object('source_query', in_o.body->>'source_query',
+		'source_table', in_o.body->>'source_table'));
 
 IF in_o.id IS NULL THEN
 	INSERT INTO meta.source(source_name ,source_description ,active_flag , ingestion_parameters, create_datetime, created_userid, parsing_parameters ,cdc_refresh_parameters ,alert_parameters ,file_type ,refresh_type ,

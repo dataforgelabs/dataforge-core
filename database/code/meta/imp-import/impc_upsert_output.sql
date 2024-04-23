@@ -9,13 +9,13 @@ DECLARE
 	v_body jsonb;
 BEGIN
 
+IF in_o.body->>'table_name' IS NULL THEN
+	RETURN jsonb_build_object('error', 'table_name is undefined');
+END IF;
+
 v_body := in_o.body || 
 	jsonb_build_object('output_package_parameters',jsonb_build_object('table_name', COALESCE(in_o.body->>'table_name',in_o.name),
-																	  'table_schema', COALESCE(in_o.body->>'schema_name','')) ) ;
-
-IF v_body->'error' IS NOT NULL THEN
-	RETURN v_body;
-END IF;
+																	  'table_schema', in_o.body->>'schema_name') ) ;
 
 IF v_id IS NULL THEN
 	INSERT INTO meta.output(output_type ,output_name ,active_flag ,created_userid ,create_datetime ,output_package_parameters ,retention_parameters ,output_description ,output_sub_type,

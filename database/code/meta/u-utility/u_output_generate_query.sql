@@ -34,13 +34,18 @@ DECLARE
     v_output_subtype text;
     v_error text;
     v_output_source_ids int[];
+    v_output_table text;
+    v_output_schema text;
+    v_output_full_table text;
 
 BEGIN
 
-SELECT o.output_type, o.output_id, o.output_sub_type
-INTO v_output_type, v_output_id, v_output_subtype
+SELECT o.output_type, o.output_id, o.output_sub_type, o.output_package_parameters->>'schema_name', output_package_parameters->>'table_name' 
+INTO v_output_type, v_output_id, v_output_subtype, v_output_schema, v_output_table
 FROM meta.output o 
 WHERE o.output_id = in_output_id;
+
+v_output_full_table := COALESCE(v_output_schema || '.', '') || v_output_table;
 
 SELECT array_agg(os.output_source_id) INTO v_output_source_ids
 FROM meta.output_source os WHERE os.output_id = in_output_id;
@@ -143,7 +148,9 @@ END IF;
 
     END LOOP;
 
-    v_query := array_to_string(v_queries, ' UNION ALL ');
+    v_query := 'DROP TABLE IF EXISTS ' || v_output_full_table || ';
+    CREATE TABLE ' || v_output_full_table || ' AS 
+    ' || array_to_string(v_queries, ' UNION ALL ');
     RETURN v_query;
 
 EXCEPTION WHEN OTHERS THEN
