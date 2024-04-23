@@ -1,6 +1,6 @@
 #!/bin/bash
 ##please do not leave any /r characters in this file!
-#Runs in database directory
+#Script runs in database directory
 # Build Core
 pgdeploy="$(pwd)/pg_deploy.sql"
 echo $pgdeploy
