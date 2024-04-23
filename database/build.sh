@@ -1,6 +1,7 @@
 #!/bin/bash
 ##please do not leave any /r characters in this file!!
 # Build Core
+cd database
 pgdeploy="$(pwd)/pg_deploy.sql"
 echo $pgdeploy
 echo "--Built: $(date)" > $pgdeploy
