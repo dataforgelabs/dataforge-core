@@ -100,7 +100,7 @@ BEGIN
 	INTO v_all_output_query
 	FROM _outputs;
 
-	RETURN json_build_object('source', v_source_queries, 'output',v_output_queries, 'run', E'/*SOURCES*/\n' || v_all_source_query || E'\n/*OUTPUTs*/\n' || v_all_output_query);
+	RETURN json_build_object('source', v_source_queries, 'output',v_output_queries, 'run', E'/*SOURCES*/\n' || v_all_source_query || COALESCE( E'\n/*OUTPUTs*/\n' || v_all_output_query, ''));
 
 
 END;
