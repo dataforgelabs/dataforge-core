@@ -123,23 +123,23 @@ class ImportProject:
         queries = self._config.pg.sql(f"select meta.svc_generate_queries(%s)", [self.import_id])
         if not queries:
             self.fail_import('Error generating queries. See log for details')
-        if queries.get('error'):
-            self.fail_import(queries['error'])
-        for query in queries['source']:
-            file_name = os.path.join(self._config.output_source_path, query['file_name'])
-            with open(file_name, "w") as file:
-                # Write the string to the file
-                file.write(format_sql(query['query']))
-        print(f"Generated {len(queries['source'])} source queries")
-        if queries['output']:
+        if queries.get('source'):
+            for query in queries['source']:
+                file_name = os.path.join(self._config.output_source_path, query['file_name'])
+                with open(file_name, "w") as file:
+                    # Write the string to the file
+                    file.write(format_sql(query['query']))
+            print(f"Generated {len(queries['source'])} source queries")
+        if queries.get('output'):
             for query in queries['output']:
                 file_name = os.path.join(self._config.output_output_path, query['file_name'])
                 with open(file_name, "w") as file:
                     # Write the string to the file
                     file.write(format_sql(query['query']))
             print(f"Generated {len(queries['output'])} output queries")
-
-        if queries['run']:
+        if queries.get('error'):
+            self.fail_import(queries['error'])
+        if queries.get('run'):
             run_file_name = os.path.join(self._config.output_path, 'run.sql')
             with open(run_file_name, "w") as file:
                 # Write combined run file
