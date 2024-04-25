@@ -16,7 +16,8 @@ dependencies = [
     "pyspark",
     "importlib_resources",
     "databricks-sql-connector",
-    "sql-formatter"
+    "sql-formatter",
+    "psutil"
     ]
 [tool.setuptools.packages.find]
 # All the following settings are optional:

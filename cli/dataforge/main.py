@@ -1,5 +1,3 @@
-import sys
-
 from .importProject import ImportProject
 from .mainConfig import MainConfig
 

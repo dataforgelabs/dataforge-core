@@ -62,4 +62,4 @@ class Databricks:
         validate_value(self.config,'access_token')
         validate_value(self.config,'catalog')
         validate_value(self.config, 'schema')
-        self.execute("SELECT 1 as i;", mode='test')  # execute test query
+        self.execute("SELECT 1 as i", mode='test')  # execute test query
