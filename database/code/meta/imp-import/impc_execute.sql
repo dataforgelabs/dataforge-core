@@ -120,7 +120,7 @@ BEGIN
 	END IF;
 
     INSERT INTO log.actor_log (log_id, message, actor_path, severity, insert_datetime)
-        VALUES ( in_imp.log_id, 'Imported enrichment parameters','svc_import_execute', 'I', clock_timestamp());
+        VALUES ( in_imp.log_id, 'Imported enrichment parameters','impc_execute', 'I', clock_timestamp());
 
     -- update output ids
     UPDATE meta.import_object io 
@@ -146,7 +146,7 @@ BEGIN
 
     GET DIAGNOSTICS v_count = ROW_COUNT;
     INSERT INTO log.actor_log (log_id, message, actor_path, severity, insert_datetime)
-        VALUES ( in_imp.log_id, format('Imported %s outputs',v_count),'svc_import_execute', 'I', clock_timestamp());
+        VALUES ( in_imp.log_id, format('Imported %s outputs',v_count),'impc_execute', 'I', clock_timestamp());
 
     UPDATE meta.import_object io
     SET id = o.output_id
@@ -160,9 +160,29 @@ BEGIN
 		RETURN v_err;
 	END IF;
 
+    -- cascade delete objects not existing in import
+    PERFORM meta.u_delete_cascade(source_id, 'source')
+    FROM meta.source s
+    WHERE s.project_id = in_imp.project_id
+    AND s.source_id NOT IN (SELECT id FROM meta.import_object io
+            WHERE io.import_id = in_imp.import_id AND io.object_type = 'source');
+
+
     GET DIAGNOSTICS v_count = ROW_COUNT;
     INSERT INTO log.actor_log (log_id, message, actor_path, severity, insert_datetime)
-    VALUES ( in_imp.log_id, format('Deleted %s objects not existing in import',v_count),'svc_import_execute', 'I', clock_timestamp());
+    VALUES ( in_imp.log_id, format('Deleted %s sources not existing in import',v_count),'impc_execute', 'I', clock_timestamp());
+
+    PERFORM meta.u_delete_cascade(output_id, 'output')
+    FROM meta.output o
+    WHERE o.project_id = in_imp.project_id
+    AND o.output_id NOT IN (SELECT id FROM meta.import_object io
+            WHERE io.import_id = in_imp.import_id AND io.object_type = 'output');
+
+
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    INSERT INTO log.actor_log (log_id, message, actor_path, severity, insert_datetime)
+    VALUES ( in_imp.log_id, format('Deleted %s outputs not existing in import',v_count),'impc_execute', 'I', clock_timestamp());
+
 
     -- validate all imported enrichment parameters
     WITH c AS (

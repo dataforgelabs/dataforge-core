@@ -3,7 +3,7 @@ import os
 import sys
 import yaml
 
-from .databricks_sql import run
+# from .databricks_sql import run
 from .mainConfig import MainConfig
 from .miniSparky import MiniSparky
 from sql_formatter.core import format_sql
@@ -67,7 +67,10 @@ class ImportProject:
     def load_file(self, full_path: str, path: str):
         print(path)
         with open(full_path, 'r') as file:
-            file_js = yaml.safe_load(file)
+            try:
+                file_js = yaml.safe_load(file)
+            except Exception as e:
+                self.fail_import(f"Error parsing yaml file {full_path} : {e}")
             self._config.pg.sql("SELECT meta.svc_import_load_object(%s, %s, %s)",
                                 (self.import_id, path, json.dumps(file_js)))
 
@@ -119,26 +122,27 @@ class ImportProject:
     def write_queries(self):
         queries = self._config.pg.sql(f"select meta.svc_generate_queries(%s)", [self.import_id])
         if not queries:
-            self.fail_import('Error generating querie. See log for details')
+            self.fail_import('Error generating queries. See log for details')
+        if queries.get('source'):
+            for query in queries['source']:
+                file_name = os.path.join(self._config.output_source_path, query['file_name'])
+                with open(file_name, "w") as file:
+                    # Write the string to the file
+                    file.write(format_sql(query['query']))
+            print(f"Generated {len(queries['source'])} source queries")
+        if queries.get('output'):
+            for query in queries['output']:
+                file_name = os.path.join(self._config.output_output_path, query['file_name'])
+                with open(file_name, "w") as file:
+                    # Write the string to the file
+                    file.write(format_sql(query['query']))
+            print(f"Generated {len(queries['output'])} output queries")
         if queries.get('error'):
             self.fail_import(queries['error'])
-        for query in queries['source']:
-            file_name = os.path.join(self._config.output_source_path, query['file_name'])
-            with open(file_name, "w") as file:
-                # Write the string to the file
-                file.write(format_sql(query['query']))
-        print(f"Generated {len(queries['source'])} source queries")
-        for query in queries['output']:
-            file_name = os.path.join(self._config.output_output_path, query['file_name'])
-            with open(file_name, "w") as file:
-                # Write the string to the file
-                file.write(format_sql(query['query']))
-        print(f"Generated {len(queries['output'])} output queries")
+        if queries.get('run'):
+            run_file_name = os.path.join(self._config.output_path, 'run.sql')
+            with open(run_file_name, "w") as file:
+                # Write combined run file
+                file.write(format_sql(queries['run']))
+            print("Generated run.sql")
 
-        run_file_name = os.path.join(self._config.output_path, 'run.sql')
-        with open(run_file_name, "w") as file:
-            # Write combined run file
-            file.write(format_sql(queries['run']))
-        print("Generated run.sql")
-        if self._config.run_flag:
-            run(queries['run'])

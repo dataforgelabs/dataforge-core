@@ -1,4 +1,4 @@
--- for each key in in_object, replaces if with value form a matching key in in_add_object if it's not null. Runs recursively for jsonb keys
+-- for each key in in_object, replaces if with value form a matching key in in_add_object if it's not null. Runs recursively for jsonb keys.
 CREATE OR REPLACE FUNCTION meta.u_append_object(in_object jsonb, in_add_object jsonb)
     RETURNS jsonb
     LANGUAGE plpgsql

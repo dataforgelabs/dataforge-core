@@ -9,10 +9,6 @@ DECLARE
 	v_body jsonb;
 BEGIN
 
-IF in_o.body->>'table_name' IS NULL THEN
-	RETURN jsonb_build_object('error', 'table_name is undefined');
-END IF;
-
 v_body := in_o.body || 
 	jsonb_build_object('output_package_parameters',jsonb_build_object('table_name', COALESCE(in_o.body->>'table_name',in_o.name),
 																	  'table_schema', in_o.body->>'schema_name') ) ;

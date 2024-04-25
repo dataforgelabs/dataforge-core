@@ -7,7 +7,7 @@ class MiniSparky:
     def __init__(self, config: MainConfig):
         self._config = config
         self.spark = SparkSession.builder \
-            .appName("dfCore") \
+            .appName("dataforge-core") \
             .master("local[1]") \
             .config("spark.driver.extraJavaOptions", "-Dlog4j.logger.level=FATAL") \
             .config("spark.executor.extraJavaOptions", "-Dlog4j.logger.level=FATAL") \

@@ -11,6 +11,8 @@ DECLARE
     v_related_source_id int := (in_parameters->>'related_source_id')::int;
     v_insert_param_id int;
     v_parameter parameter_map;
+    v_this_parameter_flag boolean = false;
+    v_related_parameter_flag boolean = false;
 
 
 BEGIN
@@ -22,7 +24,7 @@ BEGIN
         RETURN jsonb_build_object('error', 'v_related_source_id is NULL'); 
     END IF;
 
-    FOR v_field IN SELECT unnest(t.f) FROM regexp_matches(v_expression, '(?:\[This]\.)(\w+)', 'g') t(f) LOOP
+    FOR v_field IN SELECT m[1] FROM regexp_matches(in_parameters->>'expression', '(?:\[This]\.)(\w+)', 'g') m LOOP
         
         v_parameter := meta.u_lookup_source_attribute(v_source_id, v_field);
 
@@ -37,10 +39,15 @@ BEGIN
 
         v_expression_parsed := regexp_replace(v_expression_parsed,'(\[This]\.' || v_field || ')([^\w]+|$)',
             'P<' || v_insert_param_id || '>\2','g');
+        
+        v_this_parameter_flag := true;
     END LOOP;
 
+    IF NOT v_this_parameter_flag THEN
+        RETURN jsonb_build_object('error',format('Missing [This] attribute in relation expression. %s',in_parameters->>'expression'));
+    END IF;
 
-    FOR v_field IN SELECT unnest(t.f) FROM regexp_matches(v_expression, '(?:\[Related]\.)(\w+)', 'g') t(f) LOOP
+    FOR v_field IN SELECT m[1] FROM regexp_matches(in_parameters->>'expression', '(?:\[Related]\.)(\w+)', 'g') m LOOP
         
         v_parameter := meta.u_lookup_source_attribute(v_related_source_id, v_field);
 
@@ -55,8 +62,14 @@ BEGIN
 
         v_expression_parsed := regexp_replace(v_expression_parsed,'(\[Related]\.' || v_field || ')([^\w]+|$)',
             'P<' || v_insert_param_id || '>\2','g');
-
+        
+        v_related_parameter_flag := true;
     END LOOP;
+
+    IF NOT v_related_parameter_flag THEN
+        RETURN jsonb_build_object('error',format('Missing [Related] attribute. expression. %s',v_expression));
+    END IF;
+
 
     RETURN json_build_object('test_expression', 'SELECT ' || v_expression || ' as col1 FROM datatypes'
     , 'expression_parsed', v_expression_parsed);

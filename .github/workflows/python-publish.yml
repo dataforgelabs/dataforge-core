@@ -50,16 +50,16 @@ jobs:
         name: python-package-distributions
         path: dist/
 
-  publish-to-pypi:
-    name: publish python distribution to PyPi based on environment
+  publish-to-testpypi:
+    name: publish python distribution to TestPyPi
     needs:
     - build
     runs-on: ubuntu-latest
 
     environment:
-      name: ${{ github.ref_name }}
-      url: ${{ vars.PYPI_URL }}
-      
+      name: testpypi
+      url: https://test.pypi.org/p/dataforge-core
+
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
 
@@ -69,9 +69,32 @@ jobs:
       with:
         name: python-package-distributions
         path: dist/
-    - name: publish dist to PyPi
+    - name: publish dist to TestPyPI
       uses: pypa/gh-action-pypi-publish@release/v1
-      #with:
-      #  repository-url: https://test.pypi.org/legacy/
+      with:
+        repository-url: https://test.pypi.org/legacy/
+
+  publish-to-prodpypi:
+    if: "!github.event.release.prerelease"
+    name: publish python distribution to ProdPyPi
+    needs:
+    - build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: prodpypi
+      url: https://pypi.org/p/dataforge-core
+
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: publish dist to ProdPyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
         
 

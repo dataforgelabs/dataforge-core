@@ -68,7 +68,19 @@ BEGIN
 
 	SELECT json_agg(json_build_object('file_name', file_name || '.sql', 'query', query ))
 	INTO v_source_queries
-	FROM _sources;
+	FROM _sources 
+	WHERE query NOT LIKE 'QUERY GENERATION ERROR:%';
+
+    INSERT INTO log.actor_log (log_id, message, actor_path, severity, insert_datetime)
+    SELECT v_imp.log_id, format('Error generating query for source `%s`: %s', source_name, replace(query,'QUERY GENERATION ERROR:','')),'svc_generate_queries', 'E', clock_timestamp()
+	FROM _sources 
+	WHERE query LIKE 'QUERY GENERATION ERROR:%';
+
+	GET DIAGNOSTICS v_count = ROW_COUNT;
+
+	IF v_count > 0 THEN
+		RETURN json_build_object('source', v_source_queries, 'error', 'Error generating source queries');
+	END IF;
 
 	SELECT string_agg(query,E'\n\n' ORDER BY level)
 	INTO v_all_source_query
@@ -94,14 +106,25 @@ BEGIN
 
 	SELECT json_agg(json_build_object('file_name', file_name || '.sql', 'query', query))
 	INTO v_output_queries
-	FROM _outputs;
+	FROM _outputs
+	WHERE query NOT LIKE 'QUERY GENERATION ERROR:%';
+
+    INSERT INTO log.actor_log (log_id, message, actor_path, severity, insert_datetime)
+    SELECT v_imp.log_id, format('Error generating query for output `%s`: %s', output_name, replace(query,'QUERY GENERATION ERROR:','')),'svc_generate_queries', 'E', clock_timestamp()
+	FROM _outputs 
+	WHERE query LIKE 'QUERY GENERATION ERROR:%';
+
+	GET DIAGNOSTICS v_count = ROW_COUNT;
+
+	IF v_count > 0 THEN
+		RETURN json_build_object('source', v_source_queries, 'output',v_output_queries, 'error', 'Error generating output queries');
+	END IF;
 
 	SELECT string_agg(query,E'\n\n' ORDER BY level)
 	INTO v_all_output_query
 	FROM _outputs;
 
-	RETURN json_build_object('source', v_source_queries, 'output',v_output_queries, 'run', E'/*SOURCES*/\n' || v_all_source_query || E'\n/*OUTPUTs*/\n' || v_all_output_query);
-
+	RETURN json_build_object('source', v_source_queries, 'output',v_output_queries, 'run', E'/*SOURCES*/\n' || v_all_source_query || COALESCE( E'\n/*OUTPUTs*/\n' || v_all_output_query, ''));
 
 END;
 

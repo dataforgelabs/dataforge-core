@@ -10,7 +10,7 @@ DECLARE
 BEGIN
 
 IF in_o.body->>'source_table' IS NULL THEN
-	RETURN jsonb_build_object('error', 'source_table is undefined');
+	RETURN jsonb_build_object('error', format('source_table is undefined for source `%s`',in_o.body->>'source_name'));
 END IF;
 
 v_hub_view_name :=  COALESCE(in_o.body->>'target_table',in_o.name); 
