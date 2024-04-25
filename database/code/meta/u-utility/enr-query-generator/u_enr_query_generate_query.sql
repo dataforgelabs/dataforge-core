@@ -91,7 +91,6 @@ FOR v_cte IN 0 .. v_cte_max LOOP
 
 END LOOP;
 
-
 RETURN v_sql;
     
 
@@ -109,13 +108,19 @@ AS $function$
 
 DECLARE
     v_hub_table_name text = meta.u_get_hub_table_name(in_source_id);
-    v_sql text;
+    v_query text;
 BEGIN
-    v_sql := 'DROP TABLE IF EXISTS ' || v_hub_table_name || E';
-    CREATE TABLE ' || v_hub_table_name || ' AS 
-    ' || meta.u_enr_query_generate_query(in_source_id, 'input', 0, '{}'::int[]) ||  ';
-    ';
-    RETURN v_sql;
+
+    v_query := meta.u_enr_query_generate_query(in_source_id, 'input', 0, '{}'::int[]);
+    IF v_query LIKE 'QUERY GENERATION ERROR:%' THEN
+        RETURN v_query;
+    ELSE
+        RETURN ( 'DROP TABLE IF EXISTS ' || v_hub_table_name || E';
+        CREATE TABLE ' || v_hub_table_name || ' AS 
+        ' || v_query ||  ';
+        ');
+    END IF;
+
 END;
 
 $function$;
