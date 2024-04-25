@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 [project]
 name = "dataforge-core"
-version = "update"
+version = "0.1.22"
 authors = [
     {name="Vadim Orlov", email="vorlov@dataforgelabs.com"}
 ]
