@@ -7,6 +7,15 @@ def confirm_action(message: str):
     return confirmation in ('yes', 'y')
 
 
+def get_input(message: str, current_value: str = None, required=True):
+    while True:
+        value = input(message + (f"[{current_value}]" if current_value else ""))
+        if value != '' or not required:
+            return value
+        if value == '' and current_value is not None:
+            return current_value
+
+
 def save_os_variable(name: str, value: str):
     try:
         match sys.platform:
@@ -27,3 +36,9 @@ def check_var(name: str, error_text):
         print(f"Environment variable {name} is not initialized. {error_text}")
         sys.exit(1)
     return value
+
+
+def validate_value(config, value):
+    if config.get(value) is None:
+        print(f"{value} is required")
+        sys.exit(1)

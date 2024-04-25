@@ -79,7 +79,6 @@ class ImportProject:
         self.ms = MiniSparky(self._config)
         self.test_expressions_recursive(exps)
         self.ms.stop()
-        del self.ms
 
     def test_expressions_recursive(self, test_expressions, recursion_level=0):
         try:

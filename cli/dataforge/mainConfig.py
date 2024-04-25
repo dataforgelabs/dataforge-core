@@ -2,21 +2,34 @@ import argparse
 import os
 import shutil
 import sys
-
+import yaml
+import importlib_resources
 from importlib_resources.abc import Traversable
-
 from .databricks_sql import Databricks
 from .pg import Pg
-import importlib_resources
+from importlib.metadata import version
+from .util import get_input, confirm_action
 
 
 def get_folder_path(path: str):
     return os.getcwd() if path == '' else path
 
 
+def profile_dir():
+    home_path = os.environ['APPDATA'] if sys.platform == 'win32' else os.environ['HOME']
+    return os.path.join(home_path, 'Dataforge')
+
+
+def profile_path():
+    return os.path.join(profile_dir(), 'profile.yaml')
+
+
 class MainConfig:
     def __init__(self):
         # check if Java is installed
+        self.run_path = None
+        self.config = {}
+        self.pg: Pg | None = None
         if os.environ.get('JAVA_HOME') is None:
             print("Java is not installed or JAVA_HOME environment variable is not set")
             sys.exit(1)
@@ -25,33 +38,34 @@ class MainConfig:
             prog='dataforge',
             description='Dataforge Core compiles project and generates SQL queries that create source and output tables defined in the project',
             epilog='Documentation and examples: https://github.com/dataforgelabs/dataforge-core')
-        _parser.add_argument('--build', type=str, help='Project folder', metavar='<Project Path>', nargs='?', const='')
-        _parser.add_argument('--init', '-i', type=str, help='Initialize project folder', nargs='?', const='')
+        _parser.add_argument('--build', type=str, metavar='Project Path', nargs='?', const='',
+                             help='Build project')
+        _parser.add_argument('--init', '-i', type=str, help='Initialize project folder', metavar='Project Path', nargs='?', const='')
         _parser.add_argument('--seed', action='store_true', help='Deploy and seed postgres database')
-        _parser.add_argument('--connect', '-c', type=str, help='Connect to postgres database',
-                             metavar='<Postgres connection string>')
-        _parser.add_argument('--connect_databricks', '-d', type=str, help='Connect to databricks SQL warehouse',
-                             metavar='<Databricks host URL>')
-        _parser.add_argument('--http_path', type=str, help='Databricks SQL warehouse http path',
-                             metavar='<Databricks SQL warehouse http path>')
-        _parser.add_argument('--access_token', type=str, help='Databricks access token',
-                             metavar='<Databricks SQL warehouse access token>')
-        _parser.add_argument('--run', '-r', action='store_true',
-                             help='Execute compiled project using configured Databricks SQL warehouse connection')
+        _parser.add_argument('--configure', action='store_true', help='Configure connection profile')
+        _parser.add_argument('--ver', '-v', action='store_true', help='Display version')
+
+        _parser.add_argument('--profile', type=str, help='Load configuration from profile file specified by the path',
+                             metavar='"Dataforge profile file path"')
+
+        _parser.add_argument('--run', type=str, help='Execute compiled project using configured Databricks SQL warehouse connection',
+                             metavar='Project Path', nargs='?', const='')
 
         args = _parser.parse_args()
         self.import_flag = False
+
         if len(sys.argv) < 2:
             _parser.print_help()
             sys.exit(0)
-        if args.connect:
-            self.pg = Pg(args.connect, initialize=True)
+        if args.ver:
+            print('Version ' + version('dataforge-core'))
+        if args.configure:
+            self.load_config(args.profile, True)
+            self.configure()
         else:
-            self.pg = Pg()
-        if args.seed or args.connect:
+            self.load_config(args.profile)
+        if args.seed or args.configure:
             self.pg.seed()
-        if args.connect_databricks:
-            self.databricks = Databricks(args, True)
         if args.init is not None:
             try:
                 self.source_path = get_folder_path(args.init)
@@ -73,9 +87,14 @@ class MainConfig:
             self.output_output_path = os.path.join(self.output_path, 'outputs')
             os.makedirs(self.output_output_path)
             self.import_flag = True
-        self.run_flag = args.run
-        if self.run_flag:
-            self.databricks = Databricks()
+        if args.run is not None:
+            if args.run == '':
+                self.run_path = os.path.join(os.getcwd(), 'target', 'run.sql')
+            else:
+                self.run_path = args.run
+            if not os.path.exists(self.run_path):
+                print(f"Run file {self.run_path} does not exist. Run dataforge --build first")
+            self.databricks = Databricks(self.config['databricks'])
 
     def traverse_resource_dir(self, resource: Traversable, folder=''):
         for file in resource.iterdir():
@@ -94,3 +113,50 @@ class MainConfig:
         with open(file_path, "w") as file:
             # Write the string to the file
             file.write(resource.read_text())
+
+    def configure(self):
+        connection = get_input("Enter postgres connection string: ", current_value=self.config.get('pg_connection'))
+        self.pg = Pg(connection)
+        self.config['pg_connection'] = connection
+        if confirm_action('Do you want to configure Databricks SQL Warehouse connection (y/n)?'):
+            databricks_config = {'hostname': get_input("Enter Databricks SQL Warehouse host URL: "),
+                                 'http_path': get_input("Enter http path: "),
+                                 'access_token': get_input("Enter access token: "),
+                                 'catalog': get_input("Enter catalog name: ", 'hive_metastore'),
+                                 'schema': get_input("Enter schema name: "),
+                                 }
+            self.databricks = Databricks(databricks_config, True)
+            self.config['databricks'] = databricks_config
+        self.save_config()
+
+    def save_config(self):
+        # Everything validated - save into yaml
+        try:
+            if not os.path.exists(profile_dir()):
+                os.makedirs(profile_dir())
+            with open(profile_path(), 'w') as outfile:
+                yaml.dump(self.config, outfile, default_flow_style=False)
+            print(f"Profile saved in {profile_path()}")
+        except Exception as e:
+            print(f"Error saving profile: {e}")
+            sys.exit(1)
+
+    def load_config(self, path: str = None, ignore_if_not_exists=False):
+        # Everything validated - save into yaml
+        save_profile_path = path if path else profile_path()
+        try:
+            if not os.path.exists(save_profile_path):
+                if ignore_if_not_exists:
+                    return
+                else:
+                    print(f"Profile {save_profile_path} does not exist. Run dataforge --configure")
+                    sys.exit(1)
+            if path:
+                print(f"Loading profile: {save_profile_path}")
+            with open(save_profile_path, 'r') as file:
+                self.config = yaml.safe_load(file)
+            if not ignore_if_not_exists:
+                self.pg = Pg(self.config['pg_connection'])
+        except Exception as e:
+            print(f"Error loading profile {save_profile_path}: {e}")
+            sys.exit(1)

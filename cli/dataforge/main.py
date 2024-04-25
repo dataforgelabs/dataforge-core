@@ -1,3 +1,5 @@
+import sys
+
 from .importProject import ImportProject
 from .mainConfig import MainConfig
 
@@ -7,8 +9,8 @@ def main():
     if conf.import_flag:
         imp = ImportProject(conf)
         imp.load()
-    if conf.run_flag:
-        conf.databricks.run(conf.output_path)
+    if conf.run_path:
+        conf.databricks.run(conf.run_path)
 
 
 if __name__ == '__main__':
