@@ -5,7 +5,7 @@
 
 ## Understanding DataForge
 
-Rather than CTEs, procedural scripts, or set-based models, developers write inline functions using single-column SQL expression statements.
+DataForge enables writing of inline functions using single-column SQL expressions rather than CTEs, procedural scripts, or set-based models.
 
 
 Each function:
