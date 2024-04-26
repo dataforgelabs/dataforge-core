@@ -116,13 +116,13 @@ class MainConfig:
         self.pg = Pg(connection)
         self.config['pg_connection'] = connection
         if confirm_action('Do you want to configure Databricks SQL Warehouse connection (y/n)?'):
-            databricks_config = {'hostname': get_input("Enter Databricks SQL Warehouse host URL: "),
-                                 'http_path': get_input("Enter http path: "),
+            databricks_config = {'hostname': get_input("Enter Server hostname: "),
+                                 'http_path': get_input("Enter HTTP path: "),
                                  'access_token': get_input("Enter access token: "),
                                  'catalog': get_input("Enter catalog name: ", 'hive_metastore'),
                                  'schema': get_input("Enter schema name: "),
                                  }
-            self.databricks = Databricks(databricks_config, True, path = self.source_path)
+            self.databricks = Databricks(databricks_config, path=self.source_path, initialize=True)
             self.config['databricks'] = databricks_config
         self.save_config()
 

@@ -40,6 +40,7 @@ class ImportProject:
     def load(self):
         self.validate()
         self.start()
+        print("Importing project files..")
         with os.scandir(self._config.source_path) as entries:
             for file in entries:
                 if file.is_dir() and file.name in ('sources', 'outputs'):
@@ -58,7 +59,6 @@ class ImportProject:
         print("Import completed successfully")
 
     def list_files(self, path: str, folder_name: str):
-        print("Importing files..")
         with os.scandir(path) as entries:
             for file in entries:
                 if file.is_file() & file.name.endswith(".yaml"):
