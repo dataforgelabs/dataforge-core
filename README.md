@@ -1,4 +1,13 @@
 # Dataforge Core
+## Description and motivation
+
+Dataforge core enables declarative, functional programming paradigm in data engineering at the most granular, columnar level.
+Developers write inline functions using SQL column expression syntax. Each function :
+- returns single column (cell) value
+- is implicitly parametrized on the components (column) used in the expression
+- is pure, with no side effects
+- is composable: functions can be chained and re-used
+Dataforge compiler automatically tracks and resolves all dependencies between functions, enabling developers to focus on business logic
 
 ## Installation
 
@@ -10,24 +19,25 @@
   
 ## Usage
 ### Command
-<code>dataforge [-h] [--init] [--seed] [--connect "Postgres connection string"] 
- [--connect_databricks "Databricks host URL"] [--http_path <Databricks SQL warehouse http path>]
- [--access_token "Databricks SQL warehouse access token"] [--run]
-[Project Path]</code>
+<code>dataforge [-h] [--build [Project Path]] [--init [Project Path]] [--seed] [--configure] [--ver]
+                 [--profile "Dataforge profile file path"] [--run [Project Path]]</code>
 
 
 ### Arguments:
   [Project Path]        Project folder. Optional, defaults to current folder
 
 ### Options:
-  - -h, --help            show this help message and exit
-  - --init, -i            Initialize project folder with sample files
-  - --seed                Deploy and seed postgres database
-  - --connect | -c "Postgres connection string" Connect to, deploy and initialize postgres database
-  - --connect_databricks | -d "Databricks host URL" Connect to databricks SQL warehouse
-  - --http_path "Databricks SQL warehouse http path" Databricks SQL warehouse http path
-  - --access_token "Databricks SQL warehouse access token" Databricks access token
-  - --run | -r             Execute compiled project using configured Databricks SQL warehouse connection
+  <table>
+  <tr><td>-h, --help</td><td>show this help message and exit</td></tr>
+  <tr><td>--configure</td><td>Connect to, and initialize postgres database and, optionally, Databricks SQL Warehouse</td></tr>
+  <tr><td>--init [Project Path]</td><td>Initialize project folder structure with sample files</td></tr>
+  <tr><td>--build [Project Path]</td><td>Build project</td></tr>
+  <tr><td>--seed</td><td>Deploy and seed postgres database</td></tr>
+  <tr><td>--profile</td><td> "Databricks SQL warehouse http path" Databricks SQL warehouse http path</td></tr>
+  <tr><td>--run [Project Path]</td><td>Execute compiled project using configured Databricks SQL warehouse connection</td></tr>
+
+## Syntax
+Run dataforge --init or check out dataforge/resources/project folder for project structure and syntax 
 
 ## Links
 - https://dataforgelabs.com
