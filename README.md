@@ -1,16 +1,29 @@
-# Dataforge Core
-## Description and motivation
+<p>&nbsp;</p>
 
-![DataForge Core-Light](etc/DataForge_Core_Color.svg#gh-light-mode-only)
-![DataForge Core-Dark](etc/DataForge_Core_Reverse.svg#gh-dark-mode-only)
+![DataForge Core-Light](etc/DataForge_Core_Flow.svg#gh-light-mode-only)
+![DataForge Core-Dark](etc/DataForge_Core_Flow_Reverse.svg#gh-dark-mode-only)
 
-Dataforge core enables declarative, functional programming paradigm in data engineering at the most granular, columnar level.
-Developers write inline functions using SQL column expression syntax. Each function :
-- returns single column (cell) value
-- is implicitly parametrized on the components (column) used in the expression
-- is pure, with no side effects
-- is composable: functions can be chained and re-used
-Dataforge compiler automatically tracks and resolves all dependencies between functions, enabling developers to focus on business logic
+[DataForge](https://www.dataoforgelabs.com) helps data analysts and engineers build and extend data solutions by leveraging modern software engineering principals.
+
+## Understanding DataForge
+
+Rather than CTEs, procedural scripts, or set-based models, developers write inline functions using single-column SQL expression statements.
+
+
+Each function:
+- is [pure](https://en.wikipedia.org/wiki/Pure_function), with no [side effects](https://en.wikipedia.org/wiki/Side_effect_(computer_science))
+- returns single column
+- is composable with other functions
+
+The software engineering principals Dataforge enables are:
+- [Functional Programming](https://en.wikipedia.org/wiki/Functional_programming)
+- [Inversion of Control](https://en.wikipedia.org/wiki/Inversion_of_control)
+- [Single Responsibility Principal](https://en.wikipedia.org/wiki/Single-responsibility_principle)
+- [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself)
+
+These principals allow DataForge code to be hyper-extensible and easy to modify - even with thousands of integrated pipelines.
+
+
 
 ## Installation
 
