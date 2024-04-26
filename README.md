@@ -1,6 +1,9 @@
 # Dataforge Core
 ## Description and motivation
 
+![DataForge Core-Light](etc/DataForge_Core_Color.svg#gh-light-mode-only)
+![DataForge Core-Dark](etc/DataForge_Core_Reverse.svg#gh-dark-mode-only)
+
 Dataforge core enables declarative, functional programming paradigm in data engineering at the most granular, columnar level.
 Developers write inline functions using SQL column expression syntax. Each function :
 - returns single column (cell) value
