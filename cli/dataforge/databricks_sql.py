@@ -49,7 +49,8 @@ class Databricks:
             pattern = re.compile(r"((?:[^;']|'[^']*')+)")
             for statement in pattern.findall(query):
                 try:
-                    cursor.execute(statement)
+                    if statement.strip() != '':
+                        cursor.execute(statement)
                 except Exception as e:
                     log_file_path = os.path.join(self.log_path, 'run.log')
                     with open(log_file_path, "w") as file:
