@@ -1,5 +1,3 @@
-<p>&nbsp;</p>
-
 ![DataForge Core-Light](etc/DataForge_Core_Flow.svg#gh-light-mode-only)
 ![DataForge Core-Dark](etc/DataForge_Core_Flow_Reverse.svg#gh-dark-mode-only)
 
