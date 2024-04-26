@@ -88,13 +88,10 @@ class MainConfig:
             os.makedirs(self.output_output_path)
             self.import_flag = True
         if args.run is not None:
-            if args.run == '':
-                self.run_path = os.path.join(os.getcwd(), 'target', 'run.sql')
-            else:
-                self.run_path = args.run
-            if not os.path.exists(self.run_path):
-                print(f"Run file {self.run_path} does not exist. Run dataforge --build first")
-            self.databricks = Databricks(self.config['databricks'])
+            self.source_path = get_folder_path(args.run)
+            self.output_path = os.path.join(self.source_path, 'target')
+            self.run_path = os.path.join(self.output_path, 'run.sql')
+            self.databricks = Databricks(self.config['databricks'], path=self.output_path)
 
     def traverse_resource_dir(self, resource: Traversable, folder=''):
         for file in resource.iterdir():
@@ -125,7 +122,7 @@ class MainConfig:
                                  'catalog': get_input("Enter catalog name: ", 'hive_metastore'),
                                  'schema': get_input("Enter schema name: "),
                                  }
-            self.databricks = Databricks(databricks_config, True)
+            self.databricks = Databricks(databricks_config, True, path = self.source_path)
             self.config['databricks'] = databricks_config
         self.save_config()
 

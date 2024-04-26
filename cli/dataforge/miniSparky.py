@@ -90,5 +90,3 @@ class MiniSparky:
 
     def stop(self):
         self.spark.sparkContext.stop()
-        del self.spark
-        time.sleep(5)
