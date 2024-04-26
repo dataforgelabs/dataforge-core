@@ -26,7 +26,6 @@ Dataforge compiler automatically tracks and resolves all dependencies between fu
 ### Arguments:
   [Project Path]        Project folder. Optional, defaults to current folder
 
-### Options:
   <table>
   <tr><td>-h, --help</td><td>show this help message and exit</td></tr>
   <tr><td>--configure</td><td>Connect to, and initialize postgres database and, optionally, Databricks SQL Warehouse</td></tr>
@@ -35,6 +34,7 @@ Dataforge compiler automatically tracks and resolves all dependencies between fu
   <tr><td>--seed</td><td>Deploy and seed postgres database</td></tr>
   <tr><td>--profile</td><td> "Databricks SQL warehouse http path" Databricks SQL warehouse http path</td></tr>
   <tr><td>--run [Project Path]</td><td>Execute compiled project using configured Databricks SQL warehouse connection</td></tr>
+ </table>
 
 ## Syntax
 Run dataforge --init or check out dataforge/resources/project folder for project structure and syntax 
