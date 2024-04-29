@@ -38,17 +38,17 @@ class MainConfig:
             prog='dataforge',
             description='Dataforge Core compiles project and generates SQL queries that create source and output tables defined in the project',
             epilog='Documentation and examples: https://github.com/dataforgelabs/dataforge-core')
-        _parser.add_argument('--build', type=str, metavar='Project Path', nargs='?', const='',
+        _parser.add_argument('--build', '-b', type=str, metavar='Project Path', nargs='?', const='',
                              help='Build project')
         _parser.add_argument('--init', '-i', type=str, help='Initialize project folder', metavar='Project Path', nargs='?', const='')
-        _parser.add_argument('--seed', action='store_true', help='Deploy and seed postgres database')
-        _parser.add_argument('--configure', action='store_true', help='Configure connection profile')
+        _parser.add_argument('--seed', '-s', action='store_true', help='Deploy and seed postgres database')
+        _parser.add_argument('--configure', '-c', action='store_true', help='Configure connection profile')
         _parser.add_argument('--version', '-v', action='store_true', help='Display version')
 
-        _parser.add_argument('--profile', type=str, help='Load configuration from profile file specified by the path',
+        _parser.add_argument('--profile', '-p', type=str, help='Load configuration from profile file specified by the path',
                              metavar='"Dataforge profile file path"')
 
-        _parser.add_argument('--run', type=str, help='Execute compiled project using configured Databricks SQL warehouse connection',
+        _parser.add_argument('--run', '-r', type=str, help='Execute compiled project using configured Databricks SQL warehouse connection',
                              metavar='Project Path', nargs='?', const='')
 
         args = _parser.parse_args()
@@ -122,9 +122,10 @@ class MainConfig:
                                  'catalog': get_input("Enter catalog name: ", 'hive_metastore'),
                                  'schema': get_input("Enter schema name: "),
                                  }
-            self.databricks = Databricks(databricks_config, path=self.source_path, initialize=True)
+            self.databricks = Databricks(databricks_config, path='', initialize=True)
             self.config['databricks'] = databricks_config
         self.save_config()
+        sys.exit(0)
 
     def save_config(self):
         # Everything validated - save into yaml
