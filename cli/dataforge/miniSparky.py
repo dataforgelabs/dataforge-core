@@ -90,3 +90,4 @@ class MiniSparky:
 
     def stop(self):
         self.spark.sparkContext.stop()
+

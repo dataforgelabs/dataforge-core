@@ -1,5 +1,7 @@
 import os
+import signal
 import sys
+import psutil
 
 
 def confirm_action(message: str):
@@ -42,3 +44,17 @@ def validate_value(config, value):
     if config.get(value) is None:
         print(f"{value} is required")
         sys.exit(1)
+
+def stop_spark_and_exit():
+    current_process = psutil.Process()
+    children = current_process.children(recursive=True)
+
+    #  terminate child processes
+    if len(children) > 0:
+        for p in children:
+            try:
+                p.send_signal(signal.SIGTERM)
+            except psutil.NoSuchProcess:
+                pass
+        psutil.wait_procs(children, timeout=5)
+    os._exit(os.EX_OK)

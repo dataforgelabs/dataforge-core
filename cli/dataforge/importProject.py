@@ -8,6 +8,8 @@ from .mainConfig import MainConfig
 from .miniSparky import MiniSparky
 from sql_formatter.core import format_sql
 
+from .util import stop_spark_and_exit
+
 
 class ImportProject:
     def __init__(self, config: MainConfig):
@@ -111,7 +113,7 @@ class ImportProject:
         print(f"Import failed: {message}")
         self._config.pg.sql("SELECT meta.svc_import_complete(%s, 'F', %s)", (self.import_id, message))
         self.write_log()
-        sys.exit(1)
+        stop_spark_and_exit()
 
     def write_log(self):
         log_file = self._config.pg.sql("SELECT meta.svc_import_get_log(%s)", [self.import_id])
