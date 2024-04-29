@@ -40,7 +40,7 @@ class Pg:
             "select string_agg(schema_name,',') from information_schema.schemata where schema_name IN ('meta','log')")
         if schemas:
             if not confirm_action(
-                    f"All objects in schema(s) {schemas} in postgres database will be deleted. Do you want to continue (y/n)?"):
+                    f"All objects in schema(s) {schemas} in postgres database will be deleted. Do you want to continue (y/n)? "):
                 sys.exit(1)
         #  Drop schemas
         self.sql("DROP SCHEMA IF EXISTS meta CASCADE;"

@@ -112,10 +112,10 @@ class MainConfig:
             file.write(resource.read_text())
 
     def configure(self):
-        connection = get_input("Enter postgres connection string: ", current_value=self.config.get('pg_connection'))
+        connection = get_input("Enter Postgres connection string: ", current_value=self.config.get('pg_connection'))
         self.pg = Pg(connection)
         self.config['pg_connection'] = connection
-        if confirm_action('Do you want to configure Databricks SQL Warehouse connection (y/n)?'):
+        if confirm_action('Do you want to configure Databricks SQL Warehouse connection (y/n)? '):
             databricks_config = {'hostname': get_input("Enter Server hostname: "),
                                  'http_path': get_input("Enter HTTP path: "),
                                  'access_token': get_input("Enter access token: "),
