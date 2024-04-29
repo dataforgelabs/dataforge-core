@@ -1,0 +1,19 @@
+---
+output_name: feature_customer 
+columns: #columns in SQL CREATE TABLE ( ... ) DDL format
+- customer string
+- line_item_receipt_date date
+- line_item_net_price_100 integer
+channels:
+#Can optionally have more than one source(s) mapped to a single output via channels
+- source_name: tpch_lineitem
+  #Optional filter condition using raw attributes or rules from source
+  filter: "[This].l_receiptdate BETWEEN '1993-01-01' AND '1998-12-31'"
+  #Optional operation type. Options are Aggregate and None
+  operation_type: "Aggregate"
+  mappings:
+    #Basic mappings
+  - c_name customer
+  - l_receiptdate line_item_receipt_date
+    #Aggregate mapping
+  - sum(net_price_int) line_item_net_price_100

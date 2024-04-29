@@ -1,0 +1,46 @@
+---
+source_name: "tpch_lineitem"
+source_table: "samples.tpch.lineitem"
+target_table: "enriched_lineitem"
+raw_attributes:
+- l_comment string
+- l_commitdate date
+- l_discount decimal
+- l_extendedprice decimal
+- l_linenumber int
+- l_linestatus string
+- l_orderkey long
+- l_partkey long
+- l_quantity decimal
+- l_receiptdate date
+- l_returnflag string
+- l_shipdate date
+- l_shipinstruct string
+- l_shipmode string
+- l_suppkey long
+- l_tax decimal
+rules:
+#Basic lookup:
+- name: "c_name"
+  expression: "[tpch_customer].c_name"
+#Lookup using explicit relation path
+- name: "c_n_name"
+  expression: "[tpch_nation].n_name"
+  parameters:
+  - source_name: tpch_nation
+    relations:
+    - "[tpch_lineitem]- orderkey -[tpch_orders]"
+    - "[tpch_orders]- custkey -[tpch_customer]"
+    - "[tpch_customer]- nationkey -[tpch_nation]"
+#Calculation using raw attributes only
+- name: "net_price_int"
+  expression: "([This].l_extendedprice - [This].l_tax - [This].l_discount)*100"
+#Calculation using function results from two sources and a raw attribute
+- name: "gross_margin_per_quantity"
+  expression: "([This].net_price_int - [tpch_partsupp].ps_supplycost)/[This].l_quantity"
+#Function result used as a key in a relation (see relations.yaml)
+- name: "partsupp_pkey"
+  expression: "CONCAT([This].l_partkey,'|',[This].l_suppkey)"
+#Use spark SQL functions inline (https://spark.apache.org/docs/latest/api/sql/index.html)
+- name: "order_date_year_month"
+  expression: "date_format([tpch_orders].o_orderdate, \"yyyyMM\")"

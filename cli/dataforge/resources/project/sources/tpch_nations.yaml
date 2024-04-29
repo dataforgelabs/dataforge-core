@@ -1,0 +1,9 @@
+---
+source_name: "tpch_nation"
+source_table: "samples.tpch.nation"
+target_table: "enriched_nation"
+raw_attributes:
+- n_comment string
+- n_name string
+- n_nationkey long
+- n_regionkey long
