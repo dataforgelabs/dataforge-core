@@ -43,7 +43,7 @@ class MainConfig:
         _parser.add_argument('--init', '-i', type=str, help='Initialize project folder', metavar='Project Path', nargs='?', const='')
         _parser.add_argument('--seed', action='store_true', help='Deploy and seed postgres database')
         _parser.add_argument('--configure', action='store_true', help='Configure connection profile')
-        _parser.add_argument('--ver', '-v', action='store_true', help='Display version')
+        _parser.add_argument('--version', '-v', action='store_true', help='Display version')
 
         _parser.add_argument('--profile', type=str, help='Load configuration from profile file specified by the path',
                              metavar='"Dataforge profile file path"')
@@ -57,7 +57,7 @@ class MainConfig:
         if len(sys.argv) < 2:
             _parser.print_help()
             sys.exit(0)
-        if args.ver:
+        if args.version:
             print('Version ' + version('dataforge-core'))
         if args.configure:
             self.load_config(args.profile, True)
