@@ -27,7 +27,7 @@ Dataforge Core is a code framework and command line tool to develop transformati
 To run the CLI you will need:
 - Java 8 or higher
   - [Amazon Corretto](https://docs.aws.amazon.com/corretto/) is a great option
-- A PostgreSQL server with a dedicated empty schema
+- A PostgreSQL server with a dedicated empty database
   - Check out our friends over at https://tembo.io/
 - Python version 3.12+
   - [Official Link](https://www.python.org/downloads/)
