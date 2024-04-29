@@ -1,7 +1,7 @@
 ![DataForge Core-Light](etc/DataForge_Core_Flow.svg#gh-light-mode-only)
 ![DataForge Core-Dark](etc/DataForge_Core_Flow_Reverse.svg#gh-dark-mode-only)
 
-[DataForge](https://www.dataoforgelabs.com) helps data analysts and engineers build and extend data solutions by leveraging modern software engineering principals.
+[DataForge](https://www.dataforgelabs.com) helps data analysts and engineers build and extend data solutions by leveraging modern software engineering principals.
 
 ## Understanding DataForge
 

@@ -40,7 +40,7 @@ class ImportProject:
     def load(self):
         self.validate()
         self.start()
-        print("Importing project files..")
+        print("Importing project files...")
         with os.scandir(self._config.source_path) as entries:
             for file in entries:
                 if file.is_dir() and file.name in ('sources', 'outputs'):
@@ -50,6 +50,7 @@ class ImportProject:
         self._config.pg.sql("SELECT meta.svc_import_complete(%s, 'I')", [self.import_id])
         self._config.pg.sql("SELECT meta.imp_parse_objects(%s)", [self.import_id])
         print("Files parsed")
+        print("Loading objects...")
         if not self._config.pg.sql("SELECT meta.svc_import_execute(%s)", [self.import_id]):
             self.fail_import('See log file for details')
         print("Objects loaded")
