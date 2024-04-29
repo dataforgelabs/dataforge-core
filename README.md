@@ -13,7 +13,7 @@ Each function:
 - returns single column
 - is composable with other functions
 
-The software engineering principals Dataforge enables are:
+DataForge software engineering principals:
 - [Functional Programming](https://en.wikipedia.org/wiki/Functional_programming)
 - [Inversion of Control](https://en.wikipedia.org/wiki/Inversion_of_control)
 - [Single Responsibility Principal](https://en.wikipedia.org/wiki/Single-responsibility_principle)
