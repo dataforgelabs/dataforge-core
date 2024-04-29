@@ -1,0 +1,8 @@
+---
+source_name: "tpch_region"
+source_table: "samples.tpch.region"
+target_table: "enriched_region"
+raw_attributes:
+- r_comment string
+- r_name string
+- r_regionkey long

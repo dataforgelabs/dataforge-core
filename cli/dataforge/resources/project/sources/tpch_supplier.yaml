@@ -1,0 +1,12 @@
+---
+source_name: "tpch_supplier"
+source_table: "samples.tpch.supplier"
+target_table: "enriched_supplier"
+raw_attributes:
+- s_acctbal decimal
+- s_address string
+- s_comment string
+- s_name string
+- s_nationkey long
+- s_phone string
+- s_suppkey long
