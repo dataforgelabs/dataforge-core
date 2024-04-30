@@ -5,3 +5,4 @@ __pycache__/
 .venv/
 cli/dataforge_core.egg-info/
 bitbucket-pipelines.yml
+cli/dataforge/resources/pg_deploy.sql
