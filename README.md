@@ -19,7 +19,7 @@ DataForge software engineering principals:
 - [Single Responsibility Principal](https://en.wikipedia.org/wiki/Single-responsibility_principle)
 - [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself)
 
-These principals allow DataForge to be hyper-extensible and easy to modify - even with thousands of integrated pipelines.
+These principals allow DataForge projects to be easy to modify and extend - even with thousands of integrated pipelines.`
 
 ## Requirements
 Dataforge Core is a code framework and command line tool to develop transformation functions and compile them into executable Spark SQL.
@@ -113,27 +113,18 @@ The CLI also includes an integration to run the code in Databricks. To support t
   Executing query
   Execution completed successfully
   ```
-## Usage
-### Command
-<code>dataforge [-h] [--build [Project Path]] [--init [Project Path]] [--seed] [--configure] [--ver]
-                 [--profile "Dataforge profile file path"] [--run [Project Path]]</code>
-
-
-### Arguments:
-  [Project Path]        Project folder. Optional, defaults to current folder
+## Commands
 
   <table>
-  <tr><td>-h, --help</td><td>show this help message and exit</td></tr>
-  <tr><td>--configure</td><td>Connect to, and initialize postgres database and, optionally, Databricks SQL Warehouse</td></tr>
-  <tr><td>--init [Project Path]</td><td>Initialize project folder structure with sample files</td></tr>
-  <tr><td>--build [Project Path]</td><td>Build project</td></tr>
-  <tr><td>--seed</td><td>Deploy and seed postgres database</td></tr>
-  <tr><td>--profile</td><td> "Databricks SQL warehouse http path" Databricks SQL warehouse http path</td></tr>
-  <tr><td>--run [Project Path]</td><td>Execute compiled project using configured Databricks SQL warehouse connection</td></tr>
+  <tr><td>-h, --help</td><td>Display this help message and exit</td></tr>
+  <tr><td>-v, --version</td><td>Display the installed DataForge version</td></tr>
+  <tr><td>-c, --configure</td><td>Connect to Postgres database and optionally Databricks SQL Warehouse</td></tr>
+  <tr><td>-s, --seed</td><td>Deploy tables and scripts to postgres database</td></tr>
+  <tr><td>-i, --init [Project Path]</td><td>Initialize project folder structure with sample code</td></tr>
+  <tr><td>-b, --build [Project Path]</td><td>Compile code, store results in Postgres, and generate target SQL files</td></tr>
+  <tr><td>-r, --run [Project Path]</td><td>Run compiled project on Databricks SQL Warehouse</td></tr>
+  <tr><td>-p, --profile [Profile Path]</td><td>Update path of stored credentials profile file</td></tr>
  </table>
-
-## Syntax
-Run dataforge --init or check out dataforge/resources/project folder for project structure and syntax 
 
 ## Links
 - https://dataforgelabs.com
