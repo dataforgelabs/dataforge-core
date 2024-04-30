@@ -1,0 +1,14 @@
+---
+source_name: "tpch_orders"
+source_table: "samples.tpch.orders"
+target_table: "enriched_orders"
+raw_attributes:
+- o_clerk string
+- o_comment string
+- o_custkey long
+- o_orderdate date
+- o_orderkey long
+- o_orderpriority string
+- o_orderstatus string
+- o_shippriority int
+- o_totalprice decimal

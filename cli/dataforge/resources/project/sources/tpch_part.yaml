@@ -1,0 +1,14 @@
+---
+source_name: "tpch_part"
+source_table: "samples.tpch.part"
+target_table: "enriched_part"
+raw_attributes:
+  - p_brand string
+  - p_comment string
+  - p_container string
+  - p_mfgr string
+  - p_name string
+  - p_partkey long
+  - p_retailprice decimal
+  - p_size int
+  - p_type string

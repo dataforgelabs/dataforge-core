@@ -1,29 +1,28 @@
+import re
 import sys
-from argparse import Namespace
 import os
-from .util import save_os_variable, check_var
+
+from .util import validate_value
 from databricks import sql
 
 
 class Databricks:
-    def __init__(self, args: Namespace = None, initialize=False):
+    def __init__(self, config, path: str, initialize=False):
         try:
+            self.config = config
+            self.log_path = path
             if initialize:
-                self.initialize(args)
-            else:
-                self.host = check_var('DATAFORGE_DATABRICKS_HOST', f"Run dataforge --connect_databricks")
-                self.http_path = check_var('DATAFORGE_DATABRICKS_HTTP_PATH', f"Run dataforge --connect_databricks")
-                self.access_token = check_var('DATAFORGE_DATABRICKS_ACCESS_TOKEN',
-                                              f"Run dataforge --connect_databricks")
+                self.validate()
         except Exception as e:
             print(f"Error connecting to Databricks: {e}")
             sys.exit(1)
 
     def run(self, path: str):
         try:
+            if not os.path.exists(path):
+                print(f"Run file {path} does not exist. Run dataforge --build first")
             # load file
-            run_file_name = os.path.join(path, 'run.sql')
-            with open(run_file_name, "w") as file:
+            with open(path, "r") as file:
                 query = file.read()
                 self.execute(query)
 
@@ -33,16 +32,32 @@ class Databricks:
 
     def execute(self, query: str, mode='run'):
         try:
-            print(f"Connecting to Databricks SQL Warehouse {self.host}")
+            print(f"Connecting to Databricks SQL Warehouse {self.config['hostname']}")
             connection = sql.connect(
-                server_hostname=self.host,
-                http_path=self.http_path,
-                access_token=self.access_token)
+                server_hostname=self.config['hostname'],
+                http_path=self.config['http_path'],
+                access_token=self.config['access_token'],
+                catalog=self.config['catalog'],
+                schema=self.config['schema']
+            )
 
             cursor = connection.cursor()
             if mode == 'run':
                 print(f"Executing query")
-            cursor.execute(query)
+            #  Databricks driver only allows one statement at a time.
+            #  Split query into multiple statements by ;, ignoring single-quoted ;
+            pattern = re.compile(r"((?:[^;']|'[^']*')+)")
+            for statement in pattern.findall(query):
+                try:
+                    if statement.strip() != '':
+                        cursor.execute(statement)
+                except Exception as e:
+                    log_file_path = os.path.join(self.log_path, 'run.log')
+                    with open(log_file_path, "w") as file:
+                        # Write the error to log file
+                        file.write(f"Error {e} while executing statement {statement}")
+                    print(f"Databricks execution error. See details in run log file {log_file_path}")
+                    sys.exit(1)
             cursor.close()
             connection.close()
             if mode == 'run':
@@ -51,23 +66,13 @@ class Databricks:
                 print("Databricks connection validated successfully")
 
         except Exception as e:
-            print(f"Run error {e}")
+            print(f"Databricks error {e}")
             sys.exit(1)
 
-    def initialize(self, args: Namespace):
-        if args.connect_databricks is None:
-            print("--connect_databricks parameter is required")
-            sys.exit(1)
-        if args.http_path is None:
-            print("--http_path parameter is required")
-            sys.exit(1)
-        if args.access_token is None:
-            print("--access_token parameter is required")
-            sys.exit(1)
-        self.host = args.connect_databricks
-        self.http_path = args.http_path
-        self.access_token = args.access_token
-        self.execute("SELECT 1", mode='test')  # execute test query
-        save_os_variable('DATAFORGE_DATABRICKS_HOST', self.host)
-        save_os_variable('DATAFORGE_DATABRICKS_HTTP_PATH', self.http_path)
-        save_os_variable('DATAFORGE_DATABRICKS_ACCESS_TOKEN', self.access_token)
+    def validate(self):
+        validate_value(self.config, 'hostname')
+        validate_value(self.config, 'http_path')
+        validate_value(self.config, 'access_token')
+        validate_value(self.config, 'catalog')
+        validate_value(self.config, 'schema')
+        self.execute("SELECT 1 as i", mode='test')  # execute test query

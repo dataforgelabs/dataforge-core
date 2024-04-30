@@ -8,6 +8,8 @@ from .mainConfig import MainConfig
 from .miniSparky import MiniSparky
 from sql_formatter.core import format_sql
 
+from .util import stop_spark_and_exit
+
 
 class ImportProject:
     def __init__(self, config: MainConfig):
@@ -40,6 +42,7 @@ class ImportProject:
     def load(self):
         self.validate()
         self.start()
+        print("Importing project files...")
         with os.scandir(self._config.source_path) as entries:
             for file in entries:
                 if file.is_dir() and file.name in ('sources', 'outputs'):
@@ -49,6 +52,7 @@ class ImportProject:
         self._config.pg.sql("SELECT meta.svc_import_complete(%s, 'I')", [self.import_id])
         self._config.pg.sql("SELECT meta.imp_parse_objects(%s)", [self.import_id])
         print("Files parsed")
+        print("Loading objects...")
         if not self._config.pg.sql("SELECT meta.svc_import_execute(%s)", [self.import_id]):
             self.fail_import('See log file for details')
         print("Objects loaded")
@@ -58,7 +62,6 @@ class ImportProject:
         print("Import completed successfully")
 
     def list_files(self, path: str, folder_name: str):
-        print("Importing files..")
         with os.scandir(path) as entries:
             for file in entries:
                 if file.is_file() & file.name.endswith(".yaml"):
@@ -79,7 +82,6 @@ class ImportProject:
         self.ms = MiniSparky(self._config)
         self.test_expressions_recursive(exps)
         self.ms.stop()
-        del self.ms
 
     def test_expressions_recursive(self, test_expressions, recursion_level=0):
         try:
@@ -111,7 +113,7 @@ class ImportProject:
         print(f"Import failed: {message}")
         self._config.pg.sql("SELECT meta.svc_import_complete(%s, 'F', %s)", (self.import_id, message))
         self.write_log()
-        sys.exit(1)
+        stop_spark_and_exit()
 
     def write_log(self):
         log_file = self._config.pg.sql("SELECT meta.svc_import_get_log(%s)", [self.import_id])

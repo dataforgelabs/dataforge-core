@@ -7,18 +7,9 @@ from .util import confirm_action, save_os_variable
 
 
 class Pg:
-    def __init__(self, connection_string: str = None, initialize=False):
+    def __init__(self, connection_string: str):
         try:
-            if initialize:
-                self.initialize(connection_string)
-            else:
-                conn_string = os.environ.get('DATAFORGE_PG_CONNECTION')
-                print(f"Connecting to Postgres..")
-                if conn_string is None:
-                    print("Postgres connection is not initialized. Run dataforge --connect \"pg_connection\"")
-                    sys.exit(1)
-                self.conn = psycopg2.connect(conn_string)
-                self.conn.set_session(autocommit=True)
+            self.connect(connection_string)
 
         except Exception as e:
             print(f"Error connecting to Postgres: {e}")
@@ -33,16 +24,15 @@ class Pg:
         cur.close()
         return res[0]
 
-    def initialize(self, connection_string: str):
+    def connect(self, connection_string: str):
         # Execute a query
         try:
-            print("Platform :", sys.platform)
             self.conn = psycopg2.connect(connection_string)
+            self.conn.set_session(autocommit=True)
             self.sql("select 1")  # execute test query
-            save_os_variable('DATAFORGE_PG_CONNECTION', connection_string)
             # Change connection
         except Exception as e:
-            print(f"Error initializing Postgres database or insufficient permissions. Details: {e}")
+            print(f"Error connecting to Postgres database or insufficient permissions. Details: {e}")
             sys.exit(1)
 
     def seed(self):
@@ -50,7 +40,7 @@ class Pg:
             "select string_agg(schema_name,',') from information_schema.schemata where schema_name IN ('meta','log')")
         if schemas:
             if not confirm_action(
-                    f"All objects in schema(s) {schemas} in postgres database will be deleted. Do you want to continue (y/n)?"):
+                    f"All objects in schema(s) {schemas} in postgres database will be deleted. Do you want to continue (y/n)? "):
                 sys.exit(1)
         #  Drop schemas
         self.sql("DROP SCHEMA IF EXISTS meta CASCADE;"

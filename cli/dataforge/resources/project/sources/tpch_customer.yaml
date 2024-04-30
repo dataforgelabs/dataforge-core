@@ -1,0 +1,13 @@
+---
+source_name: "tpch_customer"
+source_table: "samples.tpch.customer"
+target_table: "enriched_customer"
+raw_attributes:
+- c_acctbal decimal
+- c_address string
+- c_comment string
+- c_custkey long
+- c_mktsegment string
+- c_name string
+- c_nationkey long
+- c_phone string

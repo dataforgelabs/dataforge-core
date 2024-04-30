@@ -57,8 +57,6 @@ IF in_mode IN ('input','reset') THEN
     FROM meta.enrichment e
     WHERE e.source_id = in_source_id AND e.active_flag 
     AND e.enrichment_id <> ALL (v_enr_children);
-    -- Add validation status
-    PERFORM meta.u_enr_query_add_validation_status(in_source_id);
 
 ELSEIF in_mode = 'recalculation' THEN
     v_enr_children := in_enr_ids || meta.u_enr_query_get_enrichment_children(in_source_id,in_enr_ids);
@@ -74,8 +72,6 @@ ELSEIF in_mode = 'recalculation' THEN
     FROM meta.enrichment e
     WHERE e.source_id = in_source_id AND e.active_flag
     AND e.enrichment_id = ANY (v_enr_children);
-    -- Add validation status
-    PERFORM meta.u_assert( meta.u_enr_query_add_validation_status(in_source_id) IS NOT NULL, 'Could not add s_validation_status_code');
 
 END IF;
 

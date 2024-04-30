@@ -1,17 +1,28 @@
+import os
+import time
+
+import importlib_resources
 from pyspark.sql import SparkSession
 from pyspark.sql.types import DataType, StructType, ArrayType, DecimalType
 from .mainConfig import MainConfig
+from pyspark.find_spark_home import _find_spark_home
 
 
 class MiniSparky:
     def __init__(self, config: MainConfig):
+        #  copy log file to spark_home/conf
+        spark_conf = os.path.join(_find_spark_home(), 'conf')
+        if not os.path.exists(spark_conf):
+            os.makedirs(spark_conf)
+        log4jconf = importlib_resources.files().joinpath('resources', 'log4j2.properties')
+        with open(os.path.join(spark_conf, 'log4j2.properties'), "w") as file:
+            # Write the string to the file
+            file.write(log4jconf.read_text())
+
         self._config = config
         self.spark = SparkSession.builder \
             .appName("dataforge-core") \
             .master("local[1]") \
-            .config("spark.driver.extraJavaOptions", "-Dlog4j.logger.level=FATAL") \
-            .config("spark.executor.extraJavaOptions", "-Dlog4j.logger.level=FATAL") \
-            .config("spark.log.level", "FATAL") \
             .config("spark.driver.memory", "512m") \
             .config("spark.executor.memory", "512m") \
             .config("spark.executor.cores", "1") \
@@ -79,5 +90,4 @@ class MiniSparky:
 
     def stop(self):
         self.spark.sparkContext.stop()
-        del self.spark
 

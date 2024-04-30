@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 [project]
 name = "dataforge-core"
-version = "update"
+version = "0.1.22"
 authors = [
     {name="Vadim Orlov", email="vorlov@dataforgelabs.com"}
 ]
@@ -16,13 +16,14 @@ dependencies = [
     "pyspark",
     "importlib_resources",
     "databricks-sql-connector",
-    "sql-formatter"
+    "sql-formatter",
+    "psutil"
     ]
 [tool.setuptools.packages.find]
 # All the following settings are optional:
 where = ["cli"]  # ["."] by default
 [tool.setuptools.package-data]
-"*" = ["*.txt", "*.yaml", "*.sql"]
+"*" = ["*.txt", "*.yaml", "*.sql","log4j2.properties"]
 [project.scripts]
 dataforge = "dataforge.main:main"
 [project.urls]

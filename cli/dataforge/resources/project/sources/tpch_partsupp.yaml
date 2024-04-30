@@ -1,0 +1,13 @@
+---
+source_name: "tpch_partsupp"
+source_table: "samples.tpch.partsupp"
+target_table: "enriched_partsupp"
+raw_attributes:
+- ps_availqty int
+- ps_comment string
+- ps_partkey long
+- ps_suppkey long
+- ps_supplycost decimal
+rules:
+- name: "ps_pkey"
+  expression: "CONCAT([This].ps_partkey,'|',[This].ps_suppkey)"

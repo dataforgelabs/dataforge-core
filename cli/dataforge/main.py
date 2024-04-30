@@ -1,3 +1,4 @@
+from dataforge.util import stop_spark_and_exit
 from .importProject import ImportProject
 from .mainConfig import MainConfig
 
@@ -7,8 +8,10 @@ def main():
     if conf.import_flag:
         imp = ImportProject(conf)
         imp.load()
-    if conf.run_flag:
-        conf.databricks.run(conf.output_path)
+    if conf.run_path:
+        conf.databricks.run(conf.run_path)
+    stop_spark_and_exit()
+
 
 
 if __name__ == '__main__':
