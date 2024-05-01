@@ -19,7 +19,7 @@ DataForge software engineering principals:
 - [Single Responsibility Principal](https://en.wikipedia.org/wiki/Single-responsibility_principle)
 - [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself)
 
-These principals allow DataForge projects to be easy to modify and extend - even with thousands of integrated pipelines.`
+These principals allow DataForge projects to be easy to modify and extend - even with thousands of integrated pipelines.
 
 ## Requirements
 Dataforge Core is a code framework and command line tool to develop transformation functions and compile them into executable Spark SQL.
