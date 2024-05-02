@@ -62,12 +62,7 @@ The CLI also includes an integration to run the code in Databricks. To support t
 - Validate installation:
   ```
   > dataforge --version
-  dataforge-core 0.1.27
-  ```
-- Navigate to an empty folder and initialize project structure and sample files:
-  ```
-  > dataforge --init
-  Initialized project in C:\Users...
+  dataforge-core 1.0.0
   ```
 - Configure connections and credentials to Postgres and optionally Databricks
   ```
@@ -83,6 +78,13 @@ The CLI also includes an integration to run the code in Databricks. To support t
   Databricks connection validated successfully
   Profile saved in C:\Users...
   ```
+
+- Navigate to an empty folder and initialize project structure and sample files:
+  ```
+  > dataforge --init
+  Initialized project in C:\Users...
+  ```
+
 - Deploy dataforge structures to Postgres
   ```
   > dataforge --seed
