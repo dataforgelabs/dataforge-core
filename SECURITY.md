@@ -1,4 +1,4 @@
-Reporting Security Issues
+## Reporting Security Issues
 The DataForge team and community take security bugs in DataForge Core seriously. We appreciate your efforts to responsibly disclose your findings, and will make every effort to acknowledge your contributions.
 
 To report a security issue, please use the GitHub Security Advisory "Report a Vulnerability" tab or email the issue and findings to security@dataforgelabs.com.
