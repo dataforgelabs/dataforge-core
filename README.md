@@ -1,7 +1,7 @@
 ![DataForge Core-Light](etc/DataForge_Core_Flow.svg#gh-light-mode-only)
 ![DataForge Core-Dark](etc/DataForge_Core_Flow_Reverse.svg#gh-dark-mode-only)
 
-[DataForge](https://www.dataforgelabs.com) helps data analysts and engineers build and extend data solutions by leveraging modern software engineering principals.
+[DataForge](https://www.dataforgelabs.com) helps data analysts and engineers build and extend data solutions by leveraging modern software engineering principles.
 
 ## Understanding DataForge
 
@@ -13,13 +13,13 @@ Each function:
 - returns single column
 - is composable with other functions
 
-DataForge software engineering principals:
+DataForge software engineering principles:
 - [Functional Programming](https://en.wikipedia.org/wiki/Functional_programming)
 - [Inversion of Control](https://en.wikipedia.org/wiki/Inversion_of_control)
 - [Single Responsibility Principal](https://en.wikipedia.org/wiki/Single-responsibility_principle)
 - [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself)
 
-These principals allow DataForge projects to be easy to modify and extend - even with thousands of integrated pipelines.
+These principles allow DataForge projects to be easy to modify and extend - even with thousands of integrated pipelines.
 
 Explore the Core CLI or [learn more](https://www.dataforgelabs.com/core-vs-cloud) about how Core powers DataForge Cloud.
 
