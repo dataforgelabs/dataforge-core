@@ -21,6 +21,8 @@ DataForge software engineering principals:
 
 These principals allow DataForge projects to be easy to modify and extend - even with thousands of integrated pipelines.
 
+Explore the Core CLI or [learn more](https://www.dataforgelabs.com/core-vs-cloud) about how Core powers DataForge Cloud.
+
 ## Requirements
 Dataforge Core is a code framework and command line tool to develop transformation functions and compile them into executable Spark SQL.
 
@@ -28,7 +30,7 @@ To run the CLI you will need:
 - Java 8 or higher
   - [Amazon Corretto](https://docs.aws.amazon.com/corretto/) is a great option
 - A PostgreSQL v14+ server with a dedicated empty database
-  - Check out our friends over at https://tembo.io/
+  - Check out our friends over at [Tembo](https://tembo.io/)
 - Python version 3.12+
   - [Official Link](https://www.python.org/downloads/)
 
