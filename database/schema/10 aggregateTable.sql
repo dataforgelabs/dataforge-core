@@ -18,7 +18,7 @@ VALUES ('any', 'Returns true if at least one value of `expr` is true.', FALSE, '
     ('bool_or', 'Returns true if at least one value of `expr` is true.', FALSE, 'boolean'),
     ('collect_list', 'Collects and returns a list of non-unique elements', FALSE, 'array'),
     ('collect_set', 'Collects and returns a set of unique elements', FALSE, 'array'),
-    ('corr', 'Returns Pearson coefficient of correlation between a set of number pairs.', TRUE, 'numeric'),
+    ('corr', 'Returns Pearson coefficient of correlation between a set of number pairs.', TRUE, 'decimal'),
     ('count', 'Returns the number of rows for which the column expression is non-null.', FALSE, 'long'),
     ('count_if', 'Returns the number of `TRUE` values for the expression.', FALSE, 'long'),
 ('count_min_sketch', 'Returns a count-min sketch of a column with the given esp, confidence and seed. The result is an array of bytes, which can be deserialized to a `CountMinSketch` before usage. Count-min sketch is a probabilistic data structure used for cardinality estimation using sub-linear space.', FALSE, 'string'),
