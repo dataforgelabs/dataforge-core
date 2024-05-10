@@ -11,10 +11,12 @@ DECLARE
 BEGIN
 
     IF osc IS NULL THEN
-        RETURN CASE in_hive_type
-            WHEN 'struct' THEN 'struct()'
-            WHEN 'array' THEN 'array()'
-            ELSE 'CAST(null as ' || COALESCE(osc.datatype,'string') || ')'
+        RETURN 
+            CASE 
+            WHEN in_hive_type = 'struct' THEN 'struct()'
+            WHEN in_hive_type = 'array' THEN 'array()'
+            WHEN in_hive_type IS NOT NULL THEN 'CAST(null as ' || in_hive_type || ')'
+            ELSE 'null'
             END;
     END IF;
 

@@ -16,8 +16,7 @@ BEGIN
     SET body = p.body, 
         name =  CASE WHEN object_type IN ('source' ,'output', 'group', 'token') THEN p.body->>(object_type || '_name')
                 WHEN object_type IN ('output_template','source_template') THEN p.body->>'object_name'
-        ELSE p.body->>'name' END,
-        hash = md5(io.body_text)
+        ELSE p.body->>'name' END
     FROM parsed p WHERE p.import_object_id = io.import_object_id;
 
     INSERT INTO log.actor_log (log_id, message, actor_path, severity, insert_datetime)
