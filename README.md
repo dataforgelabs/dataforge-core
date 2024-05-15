@@ -3,6 +3,8 @@
 
 [DataForge](https://www.dataforgelabs.com) helps data analysts and engineers build and extend data solutions by leveraging modern software engineering principles.
 
+[![OSSRank](https://shields.io/endpoint?url=https://ossrank.com/shield/4025)](https://ossrank.com/p/4025)
+
 ## Understanding DataForge
 
 DataForge enables writing of inline functions using single-column SQL expressions rather than CTEs, procedural scripts, or set-based models.
