@@ -1,5 +1,4 @@
 
-DROP FUNCTION IF EXISTS meta.u_validate_output(in_output meta.output, in_import_mode text, OUT out_status character, OUT out_error text);
 CREATE OR REPLACE FUNCTION meta.u_validate_output(in_output meta.output)
  RETURNS text
  LANGUAGE plpgsql
