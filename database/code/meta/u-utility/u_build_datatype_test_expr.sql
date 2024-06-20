@@ -18,6 +18,7 @@ DECLARE
     v_exp_test_select_list      text[] := '{}';
     v_exp_test                  text;
     v_ret_expression            text    := ''; -- test expression 
+    v_attribute_name            text;
 
 BEGIN
 
@@ -27,8 +28,8 @@ BEGIN
     -- WITH ct AS (SELECT <exp1> p_1, <exp2> p_2 FROM datatypes)
     -- SELECT <expr with P<1> replaced with p_1> as col1 FROM ct
 
-    FOR v_parameter_id, v_start, v_end, v_datatype, v_aggregate_id, v_datatype_schema
-        IN SELECT id, p_start, p_end, datatype, aggregation_id, datatype_schema
+    FOR v_parameter_id, v_start, v_end, v_datatype, v_aggregate_id, v_datatype_schema, v_attribute_name
+        IN SELECT id, p_start, p_end, datatype, aggregation_id, datatype_schema, attribute_name
            FROM _params ORDER BY id LOOP
         IF v_datatype IS NULL THEN
             RETURN NULL;
@@ -43,9 +44,9 @@ BEGIN
         v_exp_test_select_list := v_exp_test_select_list ||
          (CASE WHEN v_aggregates_exist_flag AND v_aggregate_id IS NULL 
             THEN  'first_value(' || meta.u_datatype_test_expression(v_datatype,v_datatype_schema) || ')' -- wrap non-aggregated parameter into aggregate for data type testing purposes only
-            ELSE  meta.u_datatype_test_expression(v_datatype,v_datatype_schema) END  || ' p_' || v_parameter_id);
+            ELSE  meta.u_datatype_test_expression(v_datatype,v_datatype_schema) END || ' ' || v_attribute_name );
 
-        v_ret_expression := v_ret_expression || 'p_' || v_parameter_id;
+        v_ret_expression := v_ret_expression || v_attribute_name;
 
         v_last_end = v_end + 1;
     END LOOP;
