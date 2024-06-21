@@ -41,12 +41,11 @@ BEGIN
         v_ret_expression := v_ret_expression || v_add;
 
         -- add parameter with datatype
-        v_exp_test_select_list := v_exp_test_select_list ||
-         (CASE WHEN v_aggregates_exist_flag AND v_aggregate_id IS NULL 
-            THEN  'first_value(' || meta.u_datatype_test_expression(v_datatype,v_datatype_schema) || ')' -- wrap non-aggregated parameter into aggregate for data type testing purposes only
-            ELSE  meta.u_datatype_test_expression(v_datatype,v_datatype_schema) END || ' ' || v_attribute_name );
+        v_exp_test_select_list := v_exp_test_select_list || (meta.u_datatype_test_expression(v_datatype,v_datatype_schema) || ' ' || v_attribute_name);
 
-        v_ret_expression := v_ret_expression || v_attribute_name;
+        v_ret_expression := v_ret_expression || CASE WHEN v_aggregates_exist_flag AND v_aggregate_id IS NULL 
+            THEN  'first_value(' || v_attribute_name || ')' -- wrap non-aggregated parameter into aggregate for data type testing purposes only
+            ELSE v_attribute_name END;
 
         v_last_end = v_end + 1;
     END LOOP;
