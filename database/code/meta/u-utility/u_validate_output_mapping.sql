@@ -67,7 +67,8 @@ END IF;
 --Check that all parameters pointing to another source have non-blank relation_ids
 IF v_dest_source_id <> v_source_id THEN
   IF COALESCE(in_om.source_relation_ids,'{}'::int[]) = '{}'::int[] THEN
-    RETURN format('Related source parameter %s has blank source_relation_ids.  Output: %s Channel: %s Column: %s', v_output_name,v_output_source_name,v_column_name);
+    RETURN format('Related source parameter %s has blank source_relation_ids.  Output: %s Channel: %s Column: %s Attribute Source Name: %s Source_id: %s Channel Source Name: %s Channel Source_id: %s', 
+    in_om, v_output_name,v_output_source_name,v_column_name, meta.u_get_source_name(v_dest_source_id),v_dest_source_id,  meta.u_get_source_name(v_source_id), v_source_id);
   END IF;
   v_error := meta.u_validate_relation_chain(v_source_id, v_dest_source_id, '1', in_om.source_relation_ids);
   IF v_error <> '' THEN

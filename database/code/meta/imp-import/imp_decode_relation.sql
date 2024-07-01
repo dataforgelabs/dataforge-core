@@ -9,7 +9,7 @@ DECLARE
     v_source_id int;
     v_related_source_id int;
 BEGIN
-
+--Decode regex
 v_decoded := regexp_match(in_relation->>'name', '^\[([^]]+)]-(.+)-\[([^]]+)]$');
 
 IF v_decoded IS NULL OR v_decoded[1] IS NULL OR v_decoded[2] IS NULL OR v_decoded[3] IS NULL THEN 

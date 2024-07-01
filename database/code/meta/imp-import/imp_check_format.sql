@@ -16,7 +16,7 @@ BEGIN
     v_format_spec = v_format_text_arr[1]; --  'core'
     v_major = v_format_text_arr[2]::int;
     v_minor = v_format_text_arr[3]::int;
-
+    --format check
     IF v_major IS NULL OR v_minor IS NULL OR v_format_spec NOT IN ('core') THEN
         RAISE EXCEPTION 'Invalid import format %', in_format;
     END IF;

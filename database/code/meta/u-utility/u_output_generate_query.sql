@@ -104,7 +104,7 @@ END IF;
     v_system_fields :=  '';
 
     v_cte_structure :=  CASE WHEN v_aggregate_flag  AND v_output_type = 'table' THEN ' WITH agg_cte AS( ' ELSE '' END;
-    SELECT string_agg(meta.u_output_query_column_select(osc, null) || ' as ' || oc.name
+    SELECT string_agg(meta.u_output_query_column_select(osc, null) || ' as ' || meta.u_add_backticks_output_column(oc.name)
             , ', ' ORDER BY oc.position)
            || ' ' || CASE WHEN v_output_type <> 'table' THEN '' ELSE v_system_fields END
     INTO v_select_statement
@@ -140,6 +140,7 @@ END IF;
 
     v_where_clause := ' WHERE true ' || COALESCE(' AND ' || REPLACE(NULLIF(v_filter,''),'[This]','T'),'');
 
+    RAISE DEBUG 'SELECT: %', v_select_statement;
     RAISE DEBUG 'FROM: %', v_from_statement;
     RAISE DEBUG 'WHERE: %', v_where_clause;
     RAISE DEBUG 'INPUT: %', v_input_filter; 
