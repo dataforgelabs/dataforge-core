@@ -9,6 +9,7 @@
 
 DataForge enables writing of inline functions using single-column SQL expressions rather than CTEs, procedural scripts, or set-based models.
 
+For an overview of the underlying concepts, check out this introduction [blog](https://www.dataforgelabs.com/blog/introduction-dataforge-framework).
 
 Each function:
 - is [pure](https://en.wikipedia.org/wiki/Pure_function), with no [side effects](https://en.wikipedia.org/wiki/Side_effect_(computer_science))
