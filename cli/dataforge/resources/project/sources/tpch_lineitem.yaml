@@ -23,6 +23,12 @@ rules:
 #Calculation using raw attributes only
 - name: "net_price_int"
   expression: "([This].l_extendedprice - [This].l_tax - [This].l_discount)*100"
+#Use a function result in another function
+- name: "net_price_no_returns"
+  expression: "CASE WHEN [This].l_returnflag IS TRUE
+                THEN  [This].net_price_int
+                ELSE 0
+              END"
 #Basic lookup:
 - name: "c_name"
   expression: "[tpch_customer].c_name"
