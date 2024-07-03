@@ -47,7 +47,7 @@ BEGIN
         END IF;
 
         v_ret_expression := replace(v_ret_expression, format('P<%s>', v_ep.enrichment_parameter_id), 
-            CASE WHEN v_aggregates_exist_flag AND v_aggregate_id IS NULL 
+            CASE WHEN v_aggregates_exist_flag AND v_ep.aggregation_id IS NULL 
             THEN  'first_value(' || v_ep.attribute_name || ')' -- wrap non-aggregated parameter into aggregate for data type testing purposes only
             ELSE v_ep.attribute_name END);
 
