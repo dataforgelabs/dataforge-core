@@ -37,6 +37,7 @@ BEGIN
            FROM meta.enrichment_parameter ep WHERE parent_enrichment_id = in_enr.enrichment_id ORDER BY enrichment_parameter_id LOOP
         
         v_param := meta.u_get_parameter(v_ep);
+        v_attribute_name := meta.u_enr_query_get_enrichment_parameter_name(v_ep);
         RAISE DEBUG 'v_param: %',v_param;
         IF v_param.error IS NOT NULL THEN
             RETURN v_param.error;
@@ -48,11 +49,11 @@ BEGIN
 
         v_ret_expression := replace(v_ret_expression, format('P<%s>', v_ep.enrichment_parameter_id), 
             CASE WHEN v_aggregates_exist_flag AND v_ep.aggregation_id IS NULL 
-            THEN  'first_value(' || v_ep.attribute_name || ')' -- wrap non-aggregated parameter into aggregate for data type testing purposes only
-            ELSE v_ep.attribute_name END);
+            THEN  'first_value(' || v_attribute_name || ')' -- wrap non-aggregated parameter into aggregate for data type testing purposes only
+            ELSE v_attribute_name END);
 
         -- add parameter with datatype
-        v_exp_test_select_list := v_exp_test_select_list ||  (meta.u_datatype_test_expression(v_param.datatype,v_param.datatype_schema) || v_ep.attribute_name);
+        v_exp_test_select_list := v_exp_test_select_list ||  (meta.u_datatype_test_expression(v_param.datatype,v_param.datatype_schema) || v_attribute_name);
 
     END LOOP;
 
