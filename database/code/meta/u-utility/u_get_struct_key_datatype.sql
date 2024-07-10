@@ -7,7 +7,6 @@ AS $BODY$
 DECLARE
     v_key text;
     v_struct_keys_array text[];
-    v_parameter parameter_map;
     v_schema jsonb := in_datatype_schema;
 BEGIN
 

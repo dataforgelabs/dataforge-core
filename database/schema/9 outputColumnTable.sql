@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS meta.output_column
     position integer NOT NULL,
     name text COLLATE pg_catalog."default" NOT NULL,
     datatype text COLLATE pg_catalog."default" DEFAULT 'text'::text,
+    datatype_schema jsonb,
+    complex_flag boolean,
     precision smallint,
     scale smallint,
     max_length smallint,

@@ -20,8 +20,8 @@ IF in_datatype = 'struct' THEN
 
     -- Create expression as struct( field1.typeExp AS field1.name, field2.typeExp AS field2.name, ... )
 
-    SELECT 'struct(' || string_agg(CASE WHEN jsonb_typeof(field->'type') = 'string' THEN format('%s AS %s',meta.u_datatype_test_expression(field->>'type', null), field->>'name') 
-        WHEN jsonb_typeof(field->'type') = 'object' THEN format('%s AS %s',meta.u_datatype_test_expression(field->'type'->>'type', field->'type'), field->>'name') 
+    SELECT 'struct(' || string_agg(CASE WHEN jsonb_typeof(field->'type') = 'string' THEN format('%s AS `%s`',meta.u_datatype_test_expression(field->>'type', null), field->>'name') 
+        WHEN jsonb_typeof(field->'type') = 'object' THEN format('%s AS `%s`',meta.u_datatype_test_expression(field->'type'->>'type', field->'type'), field->>'name') 
         ELSE format('ERROR: Invalid type %s of field %s',field->>'type', field->>'name') END,', ') || ')'
     INTO v_exp
     FROM jsonb_array_elements(v_fields) field;
@@ -45,7 +45,7 @@ ELSEIF in_datatype = 'array' THEN
     v_exp := format('array(%s,%s)',v_array_sub_exp,v_array_sub_exp);
 
 ELSEIF in_datatype like 'decimal(%' THEN 
-    v_exp :=  format('CAST(`decimal` AS %s)',in_datatype);
+    v_exp :=  format('CAST(`decimal` AS `%s`)',in_datatype);
 ELSE
    v_exp :=  '`' || in_datatype || '`';
 END IF;   
