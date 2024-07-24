@@ -45,7 +45,7 @@ ELSEIF in_datatype = 'array' THEN
     v_exp := format('array(%s,%s)',v_array_sub_exp,v_array_sub_exp);
 
 ELSEIF in_datatype like 'decimal(%' THEN 
-    v_exp :=  format('CAST(`decimal` AS `%s`)',in_datatype);
+    v_exp :=  format('CAST(`decimal` AS decimal(38,12))',in_datatype);
 ELSE
    v_exp :=  '`' || in_datatype || '`';
 END IF;   

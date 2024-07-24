@@ -71,7 +71,12 @@ FOR v_parameter IN
     INSERT INTO elements ( type, expression, alias, attribute_id, parent_ids, data_type)
     VALUES ( 'enrichment', v_expression, in_enr.attribute_name, in_enr.enrichment_id, v_parent_element_ids,
             --Check for explicit casts or numeric/decimal types that need to be cast to 38,12
-    (SELECT CASE WHEN COALESCE(NULLIF(in_enr.cast_datatype,''), in_enr.datatype) = 'decimal' OR (COALESCE(in_enr.cast_datatype,'') <> '' AND in_enr.cast_datatype <> in_enr.datatype) THEN at.hive_ddl_type END FROM meta.attribute_type at WHERE at.hive_type = COALESCE(NULLIF(in_enr.cast_datatype,''), in_enr.datatype) ))
+     CASE WHEN NULLIF(in_enr.cast_datatype,'') IS NOT NULL THEN 
+        (SELECT at.hive_ddl_type FROM meta.attribute_type at WHERE at.hive_type = in_enr.cast_datatype)
+     WHEN in_enr.datatype = 'decimal' THEN
+        (SELECT at.hive_ddl_type FROM meta.attribute_type at WHERE at.hive_type = in_enr.datatype)
+     END
+     )
     RETURNING id )
     SELECT id INTO v_ret_element_id
     FROM cte;

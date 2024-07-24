@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION meta.u_build_datatype_test_expr(in_expression text)
+CREATE OR REPLACE FUNCTION meta.u_build_datatype_test_expr(in_expression text, in_datatype text, in_cast_datatype text)
     RETURNS text
     LANGUAGE 'plpgsql'
 
@@ -51,6 +51,10 @@ BEGIN
     END LOOP;
     -- add remaining trailing charaters
     v_ret_expression := v_ret_expression || substr(in_expression,v_last_end);
+
+    IF NULLIF(in_cast_datatype,'') IS NOT NULL THEN
+        v_ret_expression := format('CAST(%s as %s)',v_ret_expression,in_cast_datatype);
+    END IF;
 
     RAISE DEBUG 'v_exp_test_select_list: %',v_exp_test_select_list;
     

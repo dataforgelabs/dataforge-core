@@ -21,7 +21,7 @@ BEGIN
         RETURN v_ret;
     END IF;
 
-    SELECT attribute_name, enrichment_id, COALESCE(NULLIF(e.cast_datatype,''), e.datatype), datatype_schema 
+    SELECT attribute_name, enrichment_id, e.datatype, datatype_schema 
     INTO v_ret.name, v_ret.enrichment_id, v_ret.datatype, v_ret.datatype_schema
     FROM meta.enrichment e 
     WHERE e.source_id = in_source_id AND e.active_flag AND e.attribute_name = v_attribute_name_substituted;
