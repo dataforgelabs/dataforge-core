@@ -12,7 +12,11 @@ DECLARE
 BEGIN
 
 IF in_schema IS NOT NULL THEN
-    RETURN in_schema;
+    IF jsonb_typeof(in_schema) = 'string' AND in_schema->>0 like 'decimal%' THEN
+        RETURN to_jsonb('decimal(38,12)'::text);        
+    ELSE
+        RETURN in_schema;
+    END IF;
 END IF;
 
 

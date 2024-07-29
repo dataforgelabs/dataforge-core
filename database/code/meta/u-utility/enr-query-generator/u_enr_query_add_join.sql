@@ -1,9 +1,10 @@
 CREATE OR REPLACE FUNCTION meta.u_enr_query_add_join(
     in_source_id int, -- this is source we are building join to so we can use it's attribute
-    in_source_relation_ids int[])
+    in_source_relation_ids int[],
+    in_container_source_id int)
  RETURNS int -- returns meta.query_element.id
  LANGUAGE plpgsql
- COST 100
+
 AS $function$
 DECLARE
 v_element_id int;
@@ -22,18 +23,31 @@ v_source_relation_id int := in_source_relation_ids[array_upper(in_source_relatio
 v_cardinality text;
 v_uv_enrichment_id int;
 v_self_join_flag boolean;
+v_join_container_source_id int := in_container_source_id;
+
 BEGIN
-RAISE DEBUG 'Adding join to source_id % for source_relation_ids %', in_source_id, in_source_relation_ids;
+RAISE DEBUG 'Adding join to source_id % for source_relation_ids % in source_container_id=%', in_source_id, in_source_relation_ids, in_container_source_id;
+PERFORM meta.u_assert( in_source_relation_ids IS NOT NULL AND cardinality(in_source_relation_ids) > 0, 'in_source_relation_ids is null or blank relation chain=' || in_source_relation_ids::text);
 PERFORM meta.u_assert( v_source_relation_id IS NOT NULL, 'source_relation_id is null in relation chain=' || in_source_relation_ids::text);
 
--- chek if join already exists
+-- chek if join with same relation path already exists
 SELECT e.id INTO v_element_id
 FROM elements e
-WHERE e.type = 'join' AND e.relation_ids = in_source_relation_ids;
+WHERE e.type in ('join','sub-source-join') AND e.relation_ids = in_source_relation_ids AND e.container_source_id = in_container_source_id;
 
 IF v_element_id IS NOT NULL THEN
     -- join already has been added - return element id
     RETURN v_element_id;
+END IF;
+
+-- check if first relation in the chain is implicit
+SELECT sr.expression_parsed
+INTO v_join_expression
+FROM meta.source_relation sr 
+WHERE sr.source_relation_id = in_source_relation_ids[1];
+
+IF v_join_expression = 'implicit' THEN
+    RETURN meta.u_enr_query_add_sub_source_join(in_source_id, in_source_relation_ids, in_container_source_id);
 END IF;
 
 -- Get relation expression
@@ -64,20 +78,18 @@ FOR v_parameter IN
     LOOP
         PERFORM meta.u_assert( v_parameter.type IS NOT NULL, 'type is NULL for source_relation_parameter_id=' || v_parameter.source_relation_parameter_id);
 
-
-            v_parent_element_ids := v_parent_element_ids || meta.u_enr_query_add_this_source_element(v_parameter);
-
+        v_parent_element_ids := v_parent_element_ids || meta.u_enr_query_add_this_source_element(v_parameter);
     END LOOP;
-    v_parent_join_alias := 'T';
+    v_parent_join_alias := 'T' || in_container_source_id;
 ELSE 
     -- This is cascading join - need to add join parent
     SELECT CASE WHEN in_source_id = sr.source_id THEN sr.related_source_id ELSE sr.source_id END
     INTO v_cascading_source_id
     FROM meta.source_relation sr
-    WHERE sr.source_relation_id = v_source_relation_id;
+    WHERE sr.source_relation_id =  v_source_relation_id;
 
-    v_parent_relation_ids := meta.u_remove_last_array_element(in_source_relation_ids);
-    v_parent_element_ids := v_parent_element_ids || meta.u_enr_query_add_join(v_cascading_source_id, v_parent_relation_ids);
+    v_parent_relation_ids :=  meta.u_remove_last_array_element(in_source_relation_ids);
+    v_parent_element_ids := v_parent_element_ids || meta.u_enr_query_add_join(v_cascading_source_id, v_parent_relation_ids,in_container_source_id);
     v_parent_join_alias := 'J_' || meta.u_enr_query_relation_alias(v_parent_relation_ids);
 END IF;
 
@@ -107,7 +119,7 @@ FOR v_attribute_name, v_uv_enrichment_id, v_self_join_flag IN
         PERFORM meta.u_assert( v_uv_enrichment_id IS NOT NULL, 'Uniqueness validation enrichment is missing or inactive for enrichment ' || v_attribute_name || ' referenced in for source_relation_id=' || v_source_relation_id);
         
         IF v_self_join_flag THEN -- add uniqueness enrichment for self-relation, forcing it to recalculate
-            v_parent_element_ids := v_parent_element_ids || meta.u_enr_query_add_this_source_element('enrichment', v_uv_enrichment_id);
+            v_parent_element_ids := v_parent_element_ids || (SELECT meta.u_enr_query_add_enrichment(e) FROM meta.enrichment e WHERE e.enrichment_id = v_uv_enrichment_id);
         END IF;
 
         v_join_expression := v_join_expression || ' AND ' || v_join_alias || '.' 
@@ -117,8 +129,8 @@ FOR v_attribute_name, v_uv_enrichment_id, v_self_join_flag IN
 -- Inserting the join record
 
     WITH cte AS (
-    INSERT INTO elements ( type, source_id, expression, alias, attribute_id, parent_ids, relation_ids)
-    VALUES ( 'join', in_source_id, v_join_expression, v_join_alias, null, v_parent_element_ids, in_source_relation_ids )
+    INSERT INTO elements ( type, source_id, expression, alias, attribute_id, parent_ids, relation_ids, container_source_id)
+    VALUES ( 'join', in_source_id, v_join_expression, v_join_alias, v_source_relation_id, v_parent_element_ids, in_source_relation_ids, v_join_container_source_id )
     RETURNING id )
     SELECT id INTO v_ret_element_id
     FROM cte;
