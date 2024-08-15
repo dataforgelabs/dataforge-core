@@ -13,6 +13,7 @@ v_sub_source_id int;
 v_ss_query text;
 v_table_alias text = 'T' || in_enr.source_id;
 v_transform_list text;
+v_sibling_enrichment_dependencies int[];
 
 BEGIN
 
@@ -73,11 +74,9 @@ FOR v_parameter IN
         v_sub_source_id := meta.u_get_enrichment_sub_source(in_enr);
         v_ss_query := meta.u_enr_query_generate_query(v_sub_source_id, 'sub-source');
         IF v_ss_query != '' THEN -- don't generate query when no rule exist in sub-source
-
-
             IF EXISTS(SELECT 1 FROM elements e WHERE e.type like 'transit%' AND v_sub_source_id = ANY(e.container_source_ids) ) THEN
-                -- su-source transits exist, generate TRANSFORM expression
-                v_transform_list := COALESCE((SELECT string_agg( 'x.' || e.alias, ', ') 
+                -- sub-source transits exist, generate TRANSFORM expression
+                v_transform_list := COALESCE((SELECT string_agg( 'X.' || e.alias, ', ') 
                     FROM elements e WHERE e.container_source_id = v_sub_source_id AND e.type = 'raw'), '');
 
                 -- Add sub-source transits
@@ -91,7 +90,24 @@ FOR v_parameter IN
                 ),'');
 
                 v_expression := '(' || replace(v_ss_query, 'FROM input', 
-                    format('FROM inline(TRANSFORM(%s, x -> struct(%s)))', v_expression, v_transform_list)) || ')';
+                    format('FROM inline(TRANSFORM(%s, X -> struct(%s)))', v_expression, v_transform_list)) || ')';
+
+                -- find all sibling sub-source rules that contain attributes used by enrichments in this sub-source
+                -- in other words, scan all enrichment parameters in this sub-source, get list of their sources,
+                -- keep ones that are sibling sub-source, return list of sub-source enrichments for those sub-sources
+                -- TODO: make this recursive, allowing multiple sub-source traversal
+
+                SELECT COALESCE(array_agg(meta.u_enr_query_add_enrichment(se)),'{}'::int[])
+                INTO v_sibling_enrichment_dependencies
+                FROM meta.enrichment e -- sub-source enrichments
+                JOIN meta.enrichment_parameter ep ON e.enrichment_id = ep.parent_enrichment_id
+                JOIN meta.source s ON ep.source_id = s.source_id AND s.connection_type = 'sub_source' -- enrichment parameters pointing to sub-sources
+                JOIN meta.enrichment se ON se.enrichment_id = s.sub_source_enrichment_id -- parent enrichments of those sub-sources
+                WHERE e.source_id = v_sub_source_id AND se.source_id = in_enr.source_id AND se.enrichment_id != in_enr.enrichment_id;
+
+                RAISE DEBUG 'Adding sibling sub-source enrichment parents % to enrichment %', v_sibling_enrichment_dependencies, in_enr;
+
+                v_parent_element_ids := v_parent_element_ids || v_sibling_enrichment_dependencies;
 
             ELSE -- no sub-source transits, generate simple inline        
                 v_expression := '(' || replace(v_ss_query, 'FROM input', format('FROM inline(%s)', v_expression)) || ')';

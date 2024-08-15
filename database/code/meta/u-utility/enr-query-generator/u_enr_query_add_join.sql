@@ -33,21 +33,11 @@ PERFORM meta.u_assert( v_source_relation_id IS NOT NULL, 'source_relation_id is 
 -- chek if join with same relation path already exists
 SELECT e.id INTO v_element_id
 FROM elements e
-WHERE e.type in ('join','sub-source-join') AND e.relation_ids = in_source_relation_ids AND e.container_source_id = in_container_source_id;
+WHERE e.type in ('join') AND e.relation_ids = in_source_relation_ids AND e.container_source_id = in_container_source_id;
 
 IF v_element_id IS NOT NULL THEN
     -- join already has been added - return element id
     RETURN v_element_id;
-END IF;
-
--- check if first relation in the chain is implicit
-SELECT sr.expression_parsed
-INTO v_join_expression
-FROM meta.source_relation sr 
-WHERE sr.source_relation_id = in_source_relation_ids[1];
-
-IF v_join_expression = 'implicit' THEN
-    RETURN meta.u_enr_query_add_sub_source_join(in_source_id, in_source_relation_ids, in_container_source_id);
 END IF;
 
 -- Get relation expression

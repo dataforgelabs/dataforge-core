@@ -14,12 +14,6 @@ DECLARE
     v_table_alias text = 'T' || in_container_source_id;
 BEGIN
 
--- Add sub-source joins to outer container_source_id
---  UPDATE elements e SET cte = in_cte
---  WHERE e.type = 'sub-source-join' AND cte IS NULL AND e.container_source_id = in_container_source_id
---  AND e.parent_ids <@ (SELECT array_agg(ep.id) 
---     FROM elements ep WHERE ep.container_source_id != in_container_source_id);
-
 
 -- recursively add cascading joins
 LOOP
@@ -38,7 +32,6 @@ END LOOP;
  WHERE e.type = 'transit' AND cte IS NULL AND e.container_source_id = in_container_source_id 
  AND e.parent_ids <@ (SELECT array_agg(ep.id) 
     FROM elements ep WHERE ep.cte <= in_cte AND ep.container_source_id = in_container_source_id
-    OR (ep.type = 'sub-source-join' AND ep.source_id = e.source_id )
     );
 
 

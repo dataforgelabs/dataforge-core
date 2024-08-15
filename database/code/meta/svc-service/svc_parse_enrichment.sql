@@ -29,6 +29,7 @@ DECLARE
     v_template_match_flag        BOOLEAN := FALSE;
     v_ret_params                 json;
     v_ret_aggs                   json;
+    v_ret_enr                    jsonb; 
     v_agg_error                  text;
     v_aggregate_id               int;
     v_project_id                 int;
@@ -453,7 +454,14 @@ RAISE DEBUG 'Parsed % aggregates',(SELECT COUNT(1) FROM  _aggs_parsed);
 
     SELECT json_agg(a) INTO v_ret_aggs FROM _aggs_parsed a;
 
-RETURN json_strip_nulls(json_build_object('expression', v_ret_expression, 'enrichment', in_enr, 'params', v_ret_params, 'aggs', v_ret_aggs));
+    v_ret_enr := to_jsonb(in_enr);
+
+    IF in_enr.rule_type_code = 'S' THEN
+        v_ret_enr := v_ret_enr || jsonb_build_object('sub_source_id', 
+                (SELECT source_id FROM meta.source s WHERE s.sub_source_enrichment_id = in_enr.enrichment_id)); 
+    END IF;
+
+RETURN json_strip_nulls(json_build_object('expression', v_ret_expression, 'enrichment', v_ret_enr, 'params', v_ret_params, 'aggs', v_ret_aggs));
 
 END;
 

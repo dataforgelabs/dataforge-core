@@ -36,7 +36,8 @@ END IF;
 PERFORM meta.u_assert( CASE WHEN in_mode = 'input' THEN in_input_id IS NOT NULL ELSE true END,'input_id is NULL');
 
 PERFORM meta.u_enr_query_generate_elements(in_source_id, in_mode, in_input_id, in_enr_ids);
---PERFORM meta.u_assert( NOT EXISTS(SELECT 1 FROM elements e WHERE e.container_source_id = in_source_id AND cte IS NULL), 'Error calculating element CTE groups. Review output of meta.u_enr_query_generate_elements for details');
+PERFORM meta.u_assert( NOT EXISTS(SELECT 1 FROM elements e WHERE e.container_source_id = in_source_id AND cte IS NULL), 
+'Error calculating element CTE groups. Review output of meta.u_enr_query_generate_elements for details');
 SELECT MAX(cte) INTO v_cte_max FROM elements e WHERE e.container_source_id = in_source_id;
 
 v_sql := CASE WHEN in_mode != 'sub-source' THEN '/*Compiled on ' || now() || ' mode=' || in_mode  || '*/
@@ -49,8 +50,8 @@ FOR v_cte IN 0 .. v_cte_max LOOP
        CASE WHEN in_mode = 'sub-source' AND v_cte = v_cte_max THEN E'ARRAY_AGG(STRUCT(\n' ELSE '' END;
     -- Add raw/system attributes 
     IF v_cte = 0 THEN
-        v_sql := v_sql || COALESCE((SELECT string_agg( e.expression || 
-        CASE WHEN e.expression = v_table_alias  || '.' || e.alias THEN '' ELSE ' ' || e.alias END,', ') 
+        v_sql := v_sql || COALESCE((SELECT string_agg( (e.expression || 
+        CASE WHEN e.expression = v_table_alias  || '.' || e.alias THEN '' ELSE ' ' || e.alias END),', '  ORDER BY e.alias) 
         FROM elements e WHERE e.container_source_id = in_source_id AND e.type IN ('raw','system') AND cte = 0), '');
         RAISE DEBUG 'Added raw attributes';
     ELSEIF v_cte = v_cte_max AND in_mode = 'input' THEN
@@ -59,7 +60,7 @@ FOR v_cte IN 0 .. v_cte_max LOOP
 
     -- Add attributes from prior CTEs
     v_sql := v_sql || COALESCE((SELECT string_agg(v_table_alias || '.' || e.alias ,', ') 
-    FROM elements e WHERE e.container_source_id = in_source_id AND e.type IN ('raw','system','enrichment') AND e.cte < v_cte),'');
+    FROM elements e WHERE e.container_source_id = in_source_id AND e.type IN ('raw','system') AND e.cte < v_cte),'');
     -- Add current transits
     v_sql := v_sql || COALESCE(', ' || (SELECT string_agg(e.expression || ' ' || e.alias ,', ') 
     FROM elements e WHERE e.container_source_id = in_source_id AND e.type like 'transit%' AND e.cte = v_cte AND NULLIF(e.container_source_ids,'{}') IS NULL
@@ -69,19 +70,20 @@ FOR v_cte IN 0 .. v_cte_max LOOP
     v_sql := v_sql || COALESCE(', ' || (SELECT string_agg(v_table_alias || '.' || e.alias ,', ') 
     FROM elements e WHERE e.container_source_id = in_source_id AND e.type like 'transit%' AND e.cte < v_cte AND NULLIF(e.container_source_ids,'{}') IS NULL
     AND EXISTS(SELECT 1 FROM elements fe WHERE fe.container_source_id = in_source_id AND fe.cte > v_cte AND fe.parent_ids @> ARRAY[e.id])),'');
-   -- Add current CTE enrichments
-    v_sql := v_sql || COALESCE(', ' || (SELECT string_agg( CASE WHEN e.data_type IS NOT NULL THEN 'CAST(' ELSE '' END ||
-        e.expression || CASE WHEN e.data_type IS NOT NULL THEN ' AS ' || e.data_type || ')' ELSE '' END || ' ' || 
-        CASE WHEN e.expression = v_table_alias || '.' || e.alias THEN '' ELSE e.alias END ,', ') 
-    FROM elements e WHERE e.container_source_id = in_source_id AND e.type = 'enrichment' AND e.cte = v_cte),'');
+  
+   -- Add current and prior CTE enrichments
+    v_sql := v_sql || COALESCE(', ' || (SELECT string_agg( 
+            CASE WHEN e.cte < v_cte THEN v_table_alias || '.' || e.alias ELSE
+                CASE WHEN e.data_type IS NOT NULL THEN 'CAST(' ELSE '' END ||
+                e.expression || CASE WHEN e.data_type IS NOT NULL THEN ' AS ' || e.data_type || ')' ELSE '' END || ' ' || 
+                CASE WHEN e.expression = v_table_alias || '.' || e.alias THEN '' ELSE e.alias END 
+            END,
+        ', '  ORDER BY e.alias) 
+    FROM elements e WHERE e.container_source_id = in_source_id AND e.type = 'enrichment' AND e.cte <= v_cte),'');
     -- add FROM clause
     v_sql := v_sql || CASE WHEN in_mode = 'sub-source' AND v_cte = v_cte_max THEN E'))\n' ELSE '' END || 
             E'\nFROM ' || CASE WHEN v_cte = 0 THEN meta.u_get_source_table_name(in_source_id) ELSE 'cte' || (v_cte - 1) END
         || ' ' || v_table_alias;
-   -- Add current CTE implicit joins to parent source
-    v_sql := v_sql || COALESCE((SELECT  string_agg( E'\nCROSS JOIN (SELECT ' || e.expression || ') ' || e.alias 
-                       ,' ' ORDER BY e.alias) 
-    FROM elements e WHERE e.container_source_id = in_source_id AND e.type = 'sub-source-join' AND e.cte = v_cte),'');
    -- Add current CTE joins
     v_sql := v_sql || COALESCE((SELECT  string_agg( E'\nLEFT JOIN ' || CASE WHEN in_source_id = e.source_id AND v_cte > 0 THEN 'cte' || (v_cte - 1) -- self-join
         ELSE meta.u_get_hub_table_name(e.source_id) END || ' ' || e.alias 
