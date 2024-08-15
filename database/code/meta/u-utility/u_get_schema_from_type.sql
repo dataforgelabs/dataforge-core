@@ -24,9 +24,12 @@ IF in_datatype = 'int' THEN
     RETURN to_jsonb('integer'::text);
 ELSEIF in_datatype LIKE 'decimal%' THEN 
     RETURN to_jsonb('decimal(38,12)'::text);
+ELSEIF in_datatype IN ('struct','array') THEN 
+    RETURN null;
 END IF;
 
 RETURN to_jsonb(in_datatype);
+
 
 END;
 
