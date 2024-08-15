@@ -59,7 +59,7 @@ FOR v_cte IN 0 .. v_cte_max LOOP
     END IF;
 
     -- Add attributes from prior CTEs
-    v_sql := v_sql || COALESCE((SELECT string_agg(v_table_alias || '.' || e.alias ,', ') 
+    v_sql := v_sql || COALESCE((SELECT string_agg(v_table_alias || '.' || e.alias ,', '  ORDER BY e.alias) 
     FROM elements e WHERE e.container_source_id = in_source_id AND e.type IN ('raw','system') AND e.cte < v_cte),'');
     -- Add current transits
     v_sql := v_sql || COALESCE(', ' || (SELECT string_agg(e.expression || ' ' || e.alias ,', ') 
@@ -103,7 +103,7 @@ EXCEPTION WHEN OTHERS THEN
     GET STACKED DIAGNOSTICS v_err_text = MESSAGE_TEXT,
                           v_err_detail = PG_EXCEPTION_DETAIL,
                           v_err_context = PG_EXCEPTION_CONTEXT;
-    RETURN format('QUERY meta.u_enr_query_generate_query(%s,%L,%L ,%L) GENERATION ERROR: %s DETAILS: %s CONTEXT: %s', 
+    RETURN format('QUERY GENERATION ERROR: meta.u_enr_query_generate_query(%s,%L,%L ,%L)  %s DETAILS: %s CONTEXT: %s', 
      in_source_id, in_mode, in_input_id, in_enr_ids,
      v_err_text, v_err_detail,v_err_context);
 

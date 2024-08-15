@@ -14,6 +14,7 @@ v_ss_query text;
 v_table_alias text = 'T' || in_enr.source_id;
 v_transform_list text;
 v_sibling_enrichment_dependencies int[];
+v_error text;
 
 BEGIN
 
@@ -27,6 +28,8 @@ IF v_element_id IS NOT NULL THEN
 END IF;
 
 RAISE DEBUG 'Adding enrichment %', to_json(in_enr);
+v_error = meta.u_validate_expression_parameters(in_enr);
+PERFORM meta.u_assert(v_error = '', 'Invalid rule: ' || v_error);
 v_expression := in_enr.expression_parsed;
 PERFORM meta.u_assert( v_expression IS NOT NULL, 'expression_parsed is NULL for enrichment=' || to_json(in_enr));
 -- Process aggregate parameters
