@@ -13,7 +13,7 @@ BEGIN
             FROM meta.raw_attribute r 
             WHERE r.raw_attribute_id = in_p.raw_attribute_id;
     ELSEIF in_p.type = 'enrichment' THEN
-            SELECT e.attribute_name, e.datatype, e.datatype_schema  
+            SELECT e.attribute_name, e.datatype, meta.u_get_enrichment_datatype_schema(e)::jsonb datatype_schema
             INTO v_ret.name, v_ret.datatype, v_ret.datatype_schema
             FROM meta.enrichment e 
             WHERE e.enrichment_id = in_p.enrichment_id;
@@ -83,7 +83,7 @@ BEGIN
             FROM meta.raw_attribute r 
             WHERE r.raw_attribute_id = osc.raw_attribute_id;
     ELSEIF osc.type = 'enrichment' THEN
-            SELECT e.attribute_name, e.datatype, e.datatype_schema, e.source_id  
+            SELECT e.attribute_name, e.datatype,  meta.u_get_enrichment_datatype_schema(e)::jsonb datatype_schema, e.source_id  
             INTO v_ret.name, v_ret.datatype, v_ret.datatype_schema, v_ret.source_id
             FROM meta.enrichment e 
             WHERE e.enrichment_id = osc.enrichment_id;
