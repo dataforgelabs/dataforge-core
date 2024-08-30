@@ -27,6 +27,10 @@ DECLARE
     v_exp text;
 BEGIN
 
+IF in_datatype IS NULL THEN
+    in_datatype = meta.u_get_typename_from_schema(in_datatype_schema::jsonb);
+END IF;
+
 IF in_datatype = 'struct' THEN 
     PERFORM meta.u_assert(in_datatype_schema->>'type' = 'struct',format('datatype_schema %s does not match datatype %s',in_datatype_schema,in_datatype));
     v_fields := in_datatype_schema->'fields';

@@ -1,7 +1,6 @@
-CREATE OR REPLACE FUNCTION meta.u_build_datatype_test_expr_from_parsed(in_enr meta.enrichment)
+CREATE OR REPLACE FUNCTION meta.u_build_datatype_test_expr_from_parsed(in_enr meta.enrichment, in_root_enrichment_id int = null)
     RETURNS text
     LANGUAGE 'plpgsql'
-
 AS
 $BODY$
 
@@ -15,6 +14,8 @@ DECLARE
     v_agg                       text;
     v_id                        int;
     v_attribute_name            text;
+    v_exp_test_select           text;
+    v_test_datatype_schema      jsonb;
 
 BEGIN
 
@@ -52,8 +53,24 @@ BEGIN
             THEN  'first_value(' || v_attribute_name || ')' -- wrap non-aggregated parameter into aggregate for data type testing purposes only
             ELSE v_attribute_name END);
 
+        IF in_root_enrichment_id IS NOT NULL AND v_param.type = 'enrichment' THEN 
+            -- substitute enrichment parameter schema with test schema passed by u_test_downstream_rules
+            SELECT et.datatype_schema
+            INTO v_test_datatype_schema
+            FROM meta.enrichment_datatype_test et 
+            WHERE et.enrichment_id = v_param.enrichment_id AND et.root_enrichment_id = in_root_enrichment_id;
+
+            IF v_test_datatype_schema IS NOT NULL THEN
+                v_param.datatype = null;
+                v_param.datatype_schema = v_test_datatype_schema;
+            END IF;
+        END IF;
+
         -- add parameter with datatype
-        v_exp_test_select_list := v_exp_test_select_list ||  (meta.u_datatype_test_expression(v_param.datatype,v_param.datatype_schema) || v_attribute_name);
+        v_exp_test_select := meta.u_datatype_test_expression(v_param.datatype,v_param.datatype_schema) || ' ' || v_attribute_name;
+        IF NOT v_exp_test_select = ANY(v_exp_test_select_list) THEN
+            v_exp_test_select_list := v_exp_test_select_list || v_exp_test_select;
+        END IF;
 
     END LOOP;
 
@@ -73,7 +90,7 @@ $BODY$;
 
 
 
-CREATE OR REPLACE FUNCTION meta.u_build_datatype_test_expr_from_parsed(in_sr meta.source_relation)
+CREATE OR REPLACE FUNCTION meta.u_build_datatype_test_expr_from_parsed(in_sr meta.source_relation, in_root_enrichment_id int = null)
     RETURNS text
     LANGUAGE 'plpgsql'
 
@@ -86,6 +103,7 @@ DECLARE
     v_exp_test_select_list      text[] := '{}';
     v_exp_test                  text;
     v_ret_expression            text :=  in_sr.expression_parsed;
+    v_test_datatype_schema      jsonb;
 
 BEGIN
 
@@ -106,8 +124,17 @@ BEGIN
             RETURN v_param.error;
         END IF;
 
-        IF v_param.datatype IS NULL THEN
-            RETURN NULL;
+        IF in_root_enrichment_id IS NOT NULL AND v_param.type = 'enrichment' THEN 
+            -- substitute enrichment parameter schema with test schema passed by u_test_downstream_rules
+            SELECT et.datatype_schema
+            INTO v_test_datatype_schema
+            FROM meta.enrichment_datatype_test et 
+            WHERE et.enrichment_id = v_param.enrichment_id AND et.root_enrichment_id = in_root_enrichment_id;
+
+            IF v_test_datatype_schema IS NOT NULL THEN
+                v_param.datatype = null;
+                v_param.datatype_schema = v_test_datatype_schema;
+            END IF;
         END IF;
 
         v_ret_expression := replace(v_ret_expression, format('P<%s>', v_ep.source_relation_parameter_id), format('p_%s', v_ep.source_relation_parameter_id)) ;
