@@ -104,7 +104,7 @@ END IF;
     v_system_fields :=  '';
 
     v_cte_structure :=  CASE WHEN v_aggregate_flag  AND v_output_type = 'table' THEN ' WITH agg_cte AS( ' ELSE '' END;
-    SELECT string_agg(meta.u_output_query_column_select(osc, null) || ' as ' || meta.u_add_backticks_output_column(oc.name)
+    SELECT string_agg(meta.u_output_query_column_select(osc, null) || ' as ' || meta.u_add_backticks(oc.name)
             , ', ' ORDER BY oc.position)
            || ' ' || CASE WHEN v_output_type <> 'table' THEN '' ELSE v_system_fields END
     INTO v_select_statement

@@ -37,7 +37,7 @@ BEGIN
            FROM meta.enrichment_parameter ep WHERE parent_enrichment_id = in_enr.enrichment_id ORDER BY enrichment_parameter_id LOOP
         
         v_param := meta.u_get_parameter(v_ep);
-        v_attribute_name := meta.u_enr_query_get_enrichment_parameter_name(v_ep);
+        v_attribute_name := v_param.name;
         RAISE DEBUG 'v_param: %',v_param;
         IF v_param.error IS NOT NULL THEN
             RETURN v_param.error;

@@ -75,13 +75,12 @@ FOR v_cte IN 0 .. v_cte_max LOOP
     v_sql := v_sql || E'\nFROM ' || CASE WHEN v_cte = 0 THEN meta.u_get_source_table_name(in_source_id) ELSE 'cte' || (v_cte - 1) END
         || ' T';
    -- Add current CTE joins
-    v_sql := v_sql || COALESCE((SELECT  string_agg( E'\nLEFT JOIN ' || CASE WHEN in_source_id = e.source_id AND v_cte > 0 THEN 'cte' || (v_cte - 1) -- self-join
+    v_sql := v_sql || COALESCE((SELECT  string_agg( E'\nLEFT JOIN ' || CASE WHEN in_source_id = e.source_id AND v_cte > 0 AND cardinality(e.relation_ids) = 1 THEN 'cte' || (v_cte - 1) -- self-join
         ELSE meta.u_get_hub_table_name(e.source_id) END || ' ' || e.alias 
                        || ' ON ' || e.expression,' ' ORDER BY e.alias) 
     FROM elements e WHERE e.type = 'join' AND e.cte = v_cte),'');
    -- Add current CTE many-joins
-    v_sql := v_sql || COALESCE((SELECT  string_agg( E'\nLEFT JOIN ' || e.alias || '_AGG' 
-                       || ' ON ' || 
+    v_sql := v_sql || COALESCE((SELECT  string_agg( E'\nLEFT JOIN ' || e.alias || '_AGG' || ' ON ' || 
                        -- Aggregate join list
                        (SELECT string_agg('T.' || DL.att || ' = ' || e.alias || '_AGG.' || DL.att, ' AND ') 
                         FROM unnest(e.many_join_list) DL(att) )

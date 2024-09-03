@@ -415,7 +415,7 @@ RAISE DEBUG 'Parsed % aggregates',(SELECT COUNT(1) FROM  _aggs_parsed);
 
 
     -- create test expression
-    v_ret_expression := meta.u_build_datatype_test_expr(in_enr.expression);
+    v_ret_expression := meta.u_build_datatype_test_expr(in_enr.expression, in_enr.datatype, in_enr.cast_datatype);
     
     SELECT json_agg(p) INTO v_ret_params FROM _params p;
 

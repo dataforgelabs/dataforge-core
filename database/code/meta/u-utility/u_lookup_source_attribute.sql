@@ -4,15 +4,15 @@ CREATE OR REPLACE FUNCTION meta.u_lookup_source_attribute(in_source_id int, in_a
 AS $function$
 
 DECLARE
-    v_ret parameter_map = ROW(null::text, null::int, null::int, null::int, in_source_id, null::text, null::text, null::jsonb)::parameter_map;
+    v_ret parameter_map = ROW(null::text, null::text, null::int, null::int, null::int, in_source_id, null::text, null::text, null::jsonb)::parameter_map;
     v_attribute_name_substituted text;
     v_attribute_name_substituted_json json;
 BEGIN
 
     v_attribute_name_substituted := in_attribute_name;
     
-    SELECT r.raw_attribute_id, r.data_type, r.datatype_schema 
-    INTO v_ret.raw_attribute_id, v_ret.datatype, v_ret.datatype_schema
+    SELECT r.column_alias, r.raw_attribute_id, r.data_type, r.datatype_schema 
+    INTO v_ret.name, v_ret.raw_attribute_id, v_ret.datatype, v_ret.datatype_schema
     FROM meta.raw_attribute r 
     WHERE r.source_id = in_source_id AND r.column_alias = v_attribute_name_substituted;
 
@@ -21,8 +21,8 @@ BEGIN
         RETURN v_ret;
     END IF;
 
-    SELECT enrichment_id, COALESCE(NULLIF(e.cast_datatype,''), e.datatype), datatype_schema 
-    INTO v_ret.enrichment_id, v_ret.datatype, v_ret.datatype_schema
+    SELECT attribute_name, enrichment_id, e.datatype, datatype_schema 
+    INTO v_ret.name, v_ret.enrichment_id, v_ret.datatype, v_ret.datatype_schema
     FROM meta.enrichment e 
     WHERE e.source_id = in_source_id AND e.active_flag AND e.attribute_name = v_attribute_name_substituted;
 
@@ -31,8 +31,8 @@ BEGIN
         RETURN v_ret;
     END IF;
 
-    SELECT s.system_attribute_id, s.data_type 
-    INTO v_ret.system_attribute_id, v_ret.datatype
+    SELECT s.name, s.system_attribute_id, s.data_type 
+    INTO v_ret.name, v_ret.system_attribute_id, v_ret.datatype
     FROM meta.system_attribute s
     JOIN meta.source src  ON src.source_id = in_source_id AND 
     s.refresh_type @> ARRAY[src.refresh_type] AND s.table_type @> ARRAY['hub']

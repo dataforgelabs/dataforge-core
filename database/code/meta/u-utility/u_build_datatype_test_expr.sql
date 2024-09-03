@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION meta.u_build_datatype_test_expr(in_expression text)
+CREATE OR REPLACE FUNCTION meta.u_build_datatype_test_expr(in_expression text, in_datatype text, in_cast_datatype text)
     RETURNS text
     LANGUAGE 'plpgsql'
 
@@ -19,6 +19,7 @@ DECLARE
     v_exp_test                  text;
     v_ret_expression            text    := ''; -- test expression 
     v_attribute_name            text;
+    v_exp_test_select           text;
 
 BEGIN
 
@@ -41,7 +42,11 @@ BEGIN
         v_ret_expression := v_ret_expression || v_add;
 
         -- add parameter with datatype
-        v_exp_test_select_list := v_exp_test_select_list || (meta.u_datatype_test_expression(v_datatype,v_datatype_schema) || ' ' || v_attribute_name);
+        v_exp_test_select := meta.u_datatype_test_expression(v_datatype,v_datatype_schema) || ' ' || v_attribute_name;
+        
+        IF NOT v_exp_test_select = ANY(v_exp_test_select_list) THEN
+            v_exp_test_select_list := v_exp_test_select_list || v_exp_test_select;
+        END IF;
 
         v_ret_expression := v_ret_expression || CASE WHEN v_aggregates_exist_flag AND v_aggregate_id IS NULL 
             THEN  'first_value(' || v_attribute_name || ')' -- wrap non-aggregated parameter into aggregate for data type testing purposes only
@@ -51,6 +56,10 @@ BEGIN
     END LOOP;
     -- add remaining trailing charaters
     v_ret_expression := v_ret_expression || substr(in_expression,v_last_end);
+
+    IF NULLIF(in_cast_datatype,'') IS NOT NULL THEN
+        v_ret_expression := format('CAST(%s as %s)',v_ret_expression,in_cast_datatype);
+    END IF;
 
     RAISE DEBUG 'v_exp_test_select_list: %',v_exp_test_select_list;
     

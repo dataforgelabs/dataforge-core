@@ -17,10 +17,10 @@ CREATE TABLE IF NOT EXISTS meta.raw_attribute(
     CONSTRAINT raw_attribute_pkey PRIMARY KEY (raw_attribute_id),
     CONSTRAINT raw_attribute_source_id_fkey FOREIGN KEY (source_id) REFERENCES meta.source(source_id),
     CONSTRAINT raw_attribute_data_type_fkey FOREIGN KEY (data_type) REFERENCES meta.attribute_type (hive_type),
-    CONSTRAINT raw_attribute_raw_attribute_name_data_type UNIQUE(source_id, raw_attribute_name, data_type, datatype_schema),
     CONSTRAINT raw_attribute_column_alias UNIQUE(column_alias, source_id)
 );
 
 CREATE INDEX IF NOT EXISTS ix_raw_attribute_source_id  ON meta.raw_attribute (source_id);
+
 
 
