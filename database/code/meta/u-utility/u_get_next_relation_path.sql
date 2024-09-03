@@ -1,7 +1,7 @@
 
 DROP FUNCTION IF EXISTS meta.u_get_next_relation_path;
 CREATE OR REPLACE FUNCTION meta.u_get_next_relation_path(in_from_source_id int, in_to_source_id int, 
-in_cardinality text = '1', in_start_path int[] = '{}', in_max_length int = 10)
+in_cardinality text = '1', in_start_path int[] = '{}', in_max_length int = 5)
  RETURNS json
  LANGUAGE plpgsql
 AS $function$
