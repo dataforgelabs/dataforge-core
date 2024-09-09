@@ -1,6 +1,7 @@
 CREATE OR REPLACE FUNCTION meta.u_enr_query_generate_query(in_source_id int, in_mode text, in_input_id int = null, in_enr_ids int[] = null)
  RETURNS text
  LANGUAGE plpgsql
+SECURITY DEFINER
 AS $function$
 
 DECLARE
@@ -39,6 +40,7 @@ PERFORM meta.u_enr_query_generate_elements(in_source_id, in_mode, in_input_id, i
 PERFORM meta.u_assert( NOT EXISTS(SELECT 1 FROM elements e WHERE e.container_source_id = in_source_id AND cte IS NULL), 
 'Error calculating element CTE groups. Review output of meta.u_enr_query_generate_elements for details');
 SELECT MAX(cte) INTO v_cte_max FROM elements e WHERE e.container_source_id = in_source_id;
+
 
 v_sql := CASE WHEN in_mode != 'sub-source' THEN '/*Compiled on ' || now() || ' mode=' || in_mode  || '*/
 ' ELSE '' END  || CASE WHEN v_cte_max > 0 THEN 'WITH ' ELSE '' END;
@@ -95,6 +97,11 @@ FOR v_cte IN 0 .. v_cte_max LOOP
 
 
 END LOOP;
+
+IF EXISTS (SELECT 1 FROM meta.source where source_id = in_source_id AND processing_type = 'stream') THEN
+    UPDATE meta.process SET parameters = parameters || jsonb_build_object('query', v_sql) WHERE input_id = in_input_id 
+    AND operation_type = 'stream';
+END IF;
 
 RETURN v_sql;
     
