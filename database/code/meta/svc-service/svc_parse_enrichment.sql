@@ -44,6 +44,7 @@ DECLARE
     v_last_end                  int := 1;
     v_error_ids                 int[];
     v_relation_path_count       int;
+    v_processing_type           text;
 
 BEGIN
 
@@ -94,6 +95,19 @@ IF NOT in_enr.keep_current_flag AND in_enr.window_function_flag THEN
     RETURN json_build_object('error', 'When expression contains window function, enrichment is required to use keep current recalculation mode');
 END IF;
 
+
+SELECT processing_type INTO v_processing_type
+FROM meta.source
+WHERE source_id = in_enr.source_id;
+
+IF v_processing_type = 'stream' THEN
+    IF in_enr.keep_current_flag THEN
+        RETURN json_build_object('error', 'Keep current recalculation mode is not supported on stream sources');
+    END IF;
+    IF in_enr.unique_flag THEN
+        RETURN json_build_object('error', 'Unique rules are not supported on stream sources');
+    END IF;
+END IF;
 
 PERFORM meta.u_read_enrichment_parameters(in_parameters -> 'params');
 
@@ -231,6 +245,10 @@ RAISE DEBUG 'Parsed % aggregates',(SELECT COUNT(1) FROM  _aggs_parsed);
 
                     IF v_source_name = 'This' AND v_aggregate_id IS NOT NULL THEN
                         RETURN json_build_object('error', format('Aggregate not allowed on [This] source attribute %s at position %s', v_attribute_name, v_attribute_start_position));
+                    END IF;
+
+                    IF v_processing_type = 'stream' AND v_aggregate_id IS NOT NULL THEN
+                        RETURN json_build_object('error', format('Aggregates are not allowed on stream source rules. attribute %s at position %s', v_attribute_name, v_attribute_start_position));
                     END IF;
 
                     v_parameter_position := v_parameter_position + 1;
