@@ -76,6 +76,10 @@ BEGIN
 
     RAISE DEBUG 'v_exp_test_select_list: %',v_exp_test_select_list;
     
+    IF NULLIF(in_enr.cast_datatype,'') IS NOT NULL THEN
+        v_ret_expression := format('CAST(%s as %s)',v_ret_expression,in_enr.cast_datatype);
+    END IF;
+
     IF cardinality(v_exp_test_select_list) > 0 THEN
         v_exp_test := format('WITH ct AS (SELECT %s FROM datatypes) SELECT %s as col1 FROM ct',array_to_string(v_exp_test_select_list,','), v_ret_expression);
     ELSE -- no parameters

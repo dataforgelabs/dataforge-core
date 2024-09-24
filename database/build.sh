@@ -9,4 +9,3 @@ cd schema
 find -name "*.sql" -print0 | sort -k2 -t/ -n -z | xargs -r0n1 cat >> $pgdeploy
 cd ../code
 cat */*/*.sql */*/*/*.sql >> $pgdeploy
- 
