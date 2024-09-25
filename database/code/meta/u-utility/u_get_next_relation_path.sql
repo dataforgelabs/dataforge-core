@@ -1,7 +1,6 @@
 
-DROP FUNCTION IF EXISTS meta.u_get_next_relation_path;
 CREATE OR REPLACE FUNCTION meta.u_get_next_relation_path(in_from_source_id int, in_to_source_id int, 
-in_cardinality text = '1', in_start_path int[] = '{}', in_max_length int = 5)
+in_cardinality text = '1', in_start_path int[] = '{}')
  RETURNS json
  LANGUAGE plpgsql
 AS $function$
@@ -20,13 +19,16 @@ DECLARE
 	v_missing_relation_ids int[];
 	v_ret_relation_ids int[] := '{}';
 	v_reverse_flag boolean;
+	v_max_length int;
 BEGIN
 
 in_start_path := COALESCE(in_start_path,'{}'::int[]);
 v_in_path_length := cardinality(in_start_path);
 -- check if relations in in_start_path exist and are active
 
-in_max_length := greatest(in_max_length, v_in_path_length + 2);
+SELECT greatest(sc.value::int, v_in_path_length + 2) INTO v_max_length
+FROM meta.system_configuration sc
+WHERE sc.name = 'max-relation-hops';
 
 SELECT array_agg(r.id) INTO v_missing_relation_ids
 FROM unnest(in_start_path) r(id)
@@ -52,7 +54,7 @@ WITH recursive ct AS (
 	ca.one_to_one_flag, ca.source_relation_id
 		FROM ct CROSS JOIN meta.u_relation_with_cardinality(ct.next_source_id) ca
 		WHERE ct.cardinality = '1' -- all relations prior to last one in the chain must be 1
-		AND ct.path_level <= in_max_length -- + v_in_path_length
+		AND ct.path_level <= v_max_length -- + v_in_path_length
 		-- prevent multiple traverse of same relation
 		AND (NOT ca.source_relation_id = ANY(ct.relation_ids) -- different relation
 			OR in_start_path[ct.path_level + 1] = ca.source_relation_id -- allow relation that came in via source path
