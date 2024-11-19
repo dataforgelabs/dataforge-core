@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION meta.u_build_datatype_test_expr_from_parsed(in_enr meta.enrichment, in_root_enrichment_id int = null)
+CREATE OR REPLACE FUNCTION meta.u_build_datatype_test_expr_from_parsed(in_enr meta.enrichment, in_root_id text = null)
     RETURNS text
     LANGUAGE 'plpgsql'
 AS
@@ -53,12 +53,13 @@ BEGIN
             THEN  'first_value(' || v_attribute_name || ')' -- wrap non-aggregated parameter into aggregate for data type testing purposes only
             ELSE v_attribute_name END);
 
-        IF in_root_enrichment_id IS NOT NULL AND v_param.type = 'enrichment' THEN 
+        IF in_root_id IS NOT NULL AND v_param.type IN ('raw','enrichment') THEN 
             -- substitute enrichment parameter schema with test schema passed by u_test_downstream_rules
             SELECT et.datatype_schema
             INTO v_test_datatype_schema
             FROM meta.enrichment_datatype_test et 
-            WHERE et.enrichment_id = v_param.enrichment_id AND et.root_enrichment_id = in_root_enrichment_id;
+            WHERE ( (v_param.type = 'enrichment' AND et.enrichment_id = v_param.enrichment_id) OR (v_param.type = 'raw' AND et.raw_attribute_id = v_param.raw_attribute_id) )
+            AND et.root_id = in_root_id;
 
             IF v_test_datatype_schema IS NOT NULL THEN
                 v_param.datatype = null;
@@ -94,7 +95,7 @@ $BODY$;
 
 
 
-CREATE OR REPLACE FUNCTION meta.u_build_datatype_test_expr_from_parsed(in_sr meta.source_relation, in_root_enrichment_id int = null)
+CREATE OR REPLACE FUNCTION meta.u_build_datatype_test_expr_from_parsed(in_sr meta.source_relation, in_root_id text = null)
     RETURNS text
     LANGUAGE 'plpgsql'
 
@@ -128,12 +129,13 @@ BEGIN
             RETURN v_param.error;
         END IF;
 
-        IF in_root_enrichment_id IS NOT NULL AND v_param.type = 'enrichment' THEN 
+        IF in_root_id IS NOT NULL AND  v_param.type IN ('raw','enrichment') THEN 
             -- substitute enrichment parameter schema with test schema passed by u_test_downstream_rules
             SELECT et.datatype_schema
             INTO v_test_datatype_schema
             FROM meta.enrichment_datatype_test et 
-            WHERE et.enrichment_id = v_param.enrichment_id AND et.root_enrichment_id = in_root_enrichment_id;
+            WHERE ( (v_param.type = 'enrichment' AND et.enrichment_id = v_param.enrichment_id) OR (v_param.type = 'raw' AND et.raw_attribute_id = v_param.raw_attribute_id) )
+            AND et.root_id = in_root_id;
 
             IF v_test_datatype_schema IS NOT NULL THEN
                 v_param.datatype = null;
