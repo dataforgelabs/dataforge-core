@@ -1,0 +1,29 @@
+---
+source_name: "tpch.part"
+source_description: "Auto-created from connection metadata"
+ingestion_parameters:
+  source_query: "select * from tpch.part limit 10000"
+  use_legacy_hive_metastore: true
+parsing_parameters:
+  schema_evolution: "Add, Remove, Upcast"
+connection_name: "Databricks Unity Samples"
+cost_parameters:
+  max_retries: 3
+  disable_profiling: false
+schedule_name: "Default"
+raw_attributes:
+- raw_attribute_name: "p_name"
+  data_type: "string"
+- raw_attribute_name: "p_retailprice"
+  data_type: "decimal"
+rules:
+- attribute_name: "cast_dec_int"
+  name: "cast dec int"
+  datatype: "double"
+  cast_datatype: "double"
+  expression: "[This].p_retailprice"
+  expression_parsed: "P<1>"
+  parameters:
+  - id: 1
+    type: "raw"
+    name: "p_retailprice"
