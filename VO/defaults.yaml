@@ -1,0 +1,7 @@
+---
+- parameter: "single_file"
+  default_value: false
+- parameter: "disable_profiling"
+  default_value: true
+- parameter: "max_retries"
+  default_value: 0
