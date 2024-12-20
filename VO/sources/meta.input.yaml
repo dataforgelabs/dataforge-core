@@ -1,0 +1,14 @@
+---
+source_name: "meta.input"
+source_description: "t"
+ingestion_parameters:
+  table_name: "meta.input"
+  generate_row_id: true
+  use_legacy_hive_metastore: true
+parsing_parameters:
+  schema_evolution: "Add, Remove, Upcast"
+refresh_type: "unmanaged"
+connection_type: "unmanaged_external"
+cost_parameters:
+  max_retries: 3
+schedule_name: "Default"
