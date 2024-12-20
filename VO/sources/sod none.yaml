@@ -1,0 +1,57 @@
+---
+source_name: "SOD none"
+source_description: "2"
+ingestion_parameters:
+  source_query: "select carriertrackingnumber,rowguid,unitprice,unitpricediscount,linetotal,modifieddate,salesorderid,salesorderdetailid,orderqty,\
+    \ CAST(productid as bigint)  productid,specialofferid from Sales.SalesOrderDetail"
+  use_legacy_hive_metastore: true
+parsing_parameters:
+  schema_evolution: "Add, Remove, Upcast, Extend All"
+refresh_type: "none"
+connection_name: "AW no agent"
+schedule_name: "Default"
+raw_attributes:
+- raw_attribute_name: "productid"
+  data_type: "long"
+rules:
+- attribute_name: "abc"
+  name: "abc"
+  datatype: "string"
+  expression: "'123'"
+  expression_parsed: "'123'"
+  active_flag: false
+- attribute_name: "i1"
+  rule_template_name: "i1"
+  name: "i1"
+  datatype: "decimal"
+  cast_datatype: "decimal"
+  expression: "18"
+  expression_parsed: "18"
+- attribute_name: "product_id_2"
+  name: "product id 2"
+  datatype: "long"
+  expression: "1 + [This].productid"
+  expression_parsed: "1 + P<1>"
+  parameters:
+  - id: 1
+    type: "raw"
+    name: "productid"
+- attribute_name: "product_id_3"
+  name: "product id 3"
+  datatype: "long"
+  expression: "[This].product_id_2 + 1"
+  expression_parsed: "P<1> + 1"
+  parameters:
+  - id: 1
+    type: "enrichment"
+    name: "product_id_2"
+- attribute_name: "rule_1"
+  name: "rule 1"
+  datatype: "int"
+  expression: "1"
+  expression_parsed: "1"
+- attribute_name: "rule_4"
+  name: "rule 2"
+  datatype: "int"
+  expression: "1"
+  expression_parsed: "1"
