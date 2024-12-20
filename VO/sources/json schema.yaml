@@ -1,0 +1,14 @@
+---
+source_name: "json schema"
+source_description: "test schema evol"
+ingestion_parameters:
+  file_mask: "JSON/schema.json"
+  delete_file: false
+  use_legacy_hive_metastore: true
+parsing_parameters:
+  schema_evolution: "Add, Remove, Upcast"
+file_type: "json"
+refresh_type: "none"
+connection_type: "file"
+connection_name: "s3 df public"
+schedule_name: "Default"
