@@ -1,0 +1,22 @@
+---
+source_name: "tpch.customer"
+source_description: "Auto-created from connection metadata"
+ingestion_parameters:
+  source_query: "select * from tpch.customer limit 1000"
+  use_legacy_hive_metastore: true
+parsing_parameters:
+  schema_evolution: "Add, Remove, Upcast"
+cdc_refresh_parameters:
+  key_columns:
+  - "c_custkey"
+  datetime_format: ""
+  exclude_from_cdc: []
+refresh_type: "key"
+connection_name: "Databricks Unity Samples"
+schedule_name: "Default"
+raw_attributes:
+- raw_attribute_name: "c_custkey"
+  data_type: "long"
+  unique_flag: true
+- raw_attribute_name: "c_name"
+  data_type: "string"
