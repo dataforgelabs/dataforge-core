@@ -1,0 +1,12 @@
+---
+name: "author"
+datatype: "string"
+attribute_name: "author"
+expression: "[This].author"
+expression_parsed: "P<1>"
+keep_current_flag: true
+test_source_name: "Store-sub book"
+parameters:
+- id: 1
+  attribute_name: "author"
+  datatype: "string"
