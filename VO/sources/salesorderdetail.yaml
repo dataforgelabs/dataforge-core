@@ -1,0 +1,60 @@
+---
+source_name: "SalesOrderDetail"
+source_description: "Auto-created from connection metadata"
+ingestion_parameters:
+  source_query: "select * from Sales.SalesOrderDetail"
+  generate_row_id: true
+  disable_initiation: true
+  use_legacy_hive_metastore: true
+parsing_parameters:
+  schema_evolution: "Add, Remove, Upcast"
+connection_name: "AdventureWorks2019"
+schedule_name: "Default"
+raw_attributes:
+- raw_attribute_name: "linetotal"
+  data_type: "decimal"
+- raw_attribute_name: "orderqty"
+  data_type: "int"
+- raw_attribute_name: "salesorderid"
+  data_type: "int"
+- raw_attribute_name: "unitprice"
+  data_type: "decimal"
+rules:
+- attribute_name: "kc"
+  name: "kc"
+  datatype: "int"
+  expression: "[SalesOrderHeader].kc"
+  expression_parsed: "P<1>"
+  parameters:
+  - id: 1
+    type: "enrichment"
+    name: "kc"
+    source_name: "SalesOrderHeader"
+    relations:
+    - "[SalesOrderDetail]-FK_SalesOrderDetail_SalesOrderHeader_SalesOrderID-[SalesOrderHeader]"
+- attribute_name: "kc_1"
+  name: "kc 1"
+  datatype: "int"
+  expression: "[This].kc"
+  expression_parsed: "P<1>"
+  keep_current_flag: true
+  parameters:
+  - id: 1
+    type: "enrichment"
+    name: "kc"
+- attribute_name: "linetotal_diff"
+  name: "linetotal diff"
+  datatype: "double"
+  cast_datatype: "double"
+  expression: "[This].linetotal - [This].unitprice * [This].orderqty"
+  expression_parsed: "P<1> - P<2> * P<3>"
+  parameters:
+  - id: 1
+    type: "raw"
+    name: "linetotal"
+  - id: 2
+    type: "raw"
+    name: "unitprice"
+  - id: 3
+    type: "raw"
+    name: "orderqty"
