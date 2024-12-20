@@ -1,8 +1,0 @@
----
-name: "i1"
-datatype: "decimal"
-cast_datatype: "decimal"
-attribute_name: "i1"
-expression: "18"
-expression_parsed: "18"
-test_source_name: "SOD ts"
