@@ -1,0 +1,73 @@
+---
+- name: "[SalesOrderDetail]-FK_SalesOrderDetail_SalesOrderHeader_SalesOrderID-[SalesOrderHeader]"
+  primary_flag: false
+  description: "Auto-created from connection metadata"
+  expression: "[This].salesorderid = [Related].salesorderid"
+  cardinality: "M-1"
+  expression_parsed: "P<1> = P<2>"
+  parameters:
+  - id: 1
+    type: "raw"
+    name: "salesorderid"
+    source_name: "SalesOrderDetail"
+  - id: 2
+    type: "raw"
+    name: "salesorderid"
+    source_name: "SalesOrderHeader"
+- name: "[SOD ts]-self-[SOD ts]"
+  primary_flag: false
+  expression: "[This].salesorderid = [Related].salesorderid"
+  cardinality: "M-M"
+  expression_parsed: "P<1> = P<2>"
+  parameters:
+  - id: 1
+    type: "raw"
+    name: "salesorderid"
+    self_relation_container: "This"
+    source_name: "SOD ts"
+  - id: 2
+    type: "raw"
+    name: "salesorderid"
+    self_relation_container: "Related"
+    source_name: "SOD ts"
+- name: "[Store]-cust-[tpch.customer]"
+  expression: "[This].s_row_id = [Related].c_custkey"
+  cardinality: "M-1"
+  expression_parsed: "P<1> = P<2>"
+  parameters:
+  - id: 1
+    type: "system"
+    name: "s_row_id"
+    source_name: "Store"
+  - id: 2
+    type: "raw"
+    name: "c_custkey"
+    source_name: "tpch.customer"
+- name: "[Store]-Implicit-[Store-sub book]"
+  description: "Implicit relation to sub-source"
+  expression: "implicit"
+  cardinality: "1-M"
+  expression_parsed: "implicit"
+- name: "[Store]-Implicit-[Store-sub fruit]"
+  description: "Implicit relation to sub-source"
+  expression: "implicit"
+  cardinality: "1-M"
+  expression_parsed: "implicit"
+  parameters:
+  - id: 1
+    type: "enrichment"
+    name: "sub_fruit"
+    source_name: "Store"
+- name: "[Store]-part-[tpch.part]"
+  expression: "[This].owner = [Related].p_name"
+  cardinality: "M-M"
+  expression_parsed: "P<1> = P<2>"
+  parameters:
+  - id: 1
+    type: "raw"
+    name: "owner"
+    source_name: "Store"
+  - id: 2
+    type: "raw"
+    name: "p_name"
+    source_name: "tpch.part"
