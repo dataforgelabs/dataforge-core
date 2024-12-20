@@ -1,0 +1,77 @@
+---
+source_name: "SalesOrderHeader"
+source_description: "Auto-created from connection metadata"
+ingestion_parameters:
+  source_query: "select * from Sales.SalesOrderHeader"
+  generate_row_id: true
+  use_legacy_hive_metastore: true
+parsing_parameters:
+  schema_evolution: "Add, Remove, Upcast"
+cdc_refresh_parameters:
+  key_columns:
+  - "SalesOrderID"
+  exclude_from_cdc: []
+refresh_type: "key"
+connection_name: "AdventureWorks2019"
+schedule_name: "Default"
+raw_attributes:
+- raw_attribute_name: "creditcardid"
+  raw_metadata:
+    scale: 0
+    precision: 10
+    nullable_flag: true
+  data_type: "int"
+- raw_attribute_name: "customerid"
+  raw_metadata:
+    scale: 0
+    precision: 10
+    nullable_flag: false
+  data_type: "int"
+- raw_attribute_name: "salesorderid"
+  data_type: "int"
+  unique_flag: true
+rules:
+- attribute_name: "i1"
+  name: "i1"
+  datatype: "decimal"
+  cast_datatype: "decimal"
+  expression: "1"
+  expression_parsed: "1"
+- attribute_name: "i2"
+  name: "i2"
+  datatype: "decimal"
+  expression: "[This].i1+ 1"
+  expression_parsed: "P<1>+ 1"
+  parameters:
+  - id: 1
+    type: "enrichment"
+    name: "i1"
+- attribute_name: "kc"
+  name: "kc"
+  datatype: "int"
+  expression: "MAX([This].creditcardid) OVER (PARTITION BY [This].customerid)"
+  expression_parsed: "MAX(P<1>) OVER (PARTITION BY P<2>)"
+  keep_current_flag: true
+  window_function_flag: true
+  parameters:
+  - id: 1
+    type: "raw"
+    name: "creditcardid"
+  - id: 2
+    type: "raw"
+    name: "customerid"
+- attribute_name: "new_attribute"
+  name: "new attribute"
+  datatype: "string"
+  cast_datatype: "string"
+  expression: "now() "
+  expression_parsed: "now() "
+- attribute_name: "ts2"
+  name: "ts2"
+  datatype: "int"
+  expression: "date_diff([This].new_attribute,now())"
+  expression_parsed: "date_diff(P<1>,now())"
+  parameters:
+  - id: 1
+    type: "enrichment"
+    name: "new_attribute"
