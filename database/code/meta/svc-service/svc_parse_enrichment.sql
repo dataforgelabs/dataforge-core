@@ -45,6 +45,7 @@ DECLARE
     v_error_ids                 int[];
     v_relation_path_count       int;
     v_processing_type           text;
+    v_loop_check                text;
 
 BEGIN
 
@@ -432,6 +433,10 @@ RAISE DEBUG 'Parsed % aggregates',(SELECT COUNT(1) FROM  _aggs_parsed);
     -- delete passed/saved parameters after last parsed parameter position
     DELETE FROM _params WHERE id > v_parameter_position;
 
+    v_loop_check := meta.u_check_enrichment_loop(in_enr.enrichment_id);
+    IF v_loop_check IS NOT NULL THEN
+        RETURN json_build_object('error', v_loop_check);
+    END IF;
 
     -- create test expression
     v_ret_expression := meta.u_build_datatype_test_expr(in_enr.expression, in_enr.datatype, in_enr.cast_datatype);
