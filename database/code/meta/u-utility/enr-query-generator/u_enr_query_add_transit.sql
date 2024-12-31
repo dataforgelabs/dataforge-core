@@ -12,6 +12,8 @@ DECLARE
     v_source_relation_ids int[]; 
     v_container_source_ids int[];
     v_parent_source_id int;
+    v_self_ref_enrichment_id int;
+    v_join_id int;
 
 BEGIN
     v_transit_alias := 'TP_' || in_parameter.parent_enrichment_id || '_' || in_parameter.enrichment_parameter_id;
@@ -38,8 +40,21 @@ BEGIN
         v_expression_alias := 'T' || v_parent_source_id;
     ELSE    
         -- Attribute from another source: add parent JOIN element
-        v_parent_element_ids := v_parent_element_ids || meta.u_enr_query_add_join(in_parameter.source_id, v_source_relation_ids, v_parent_source_id); 
+        v_join_id := meta.u_enr_query_add_join(in_parameter.source_id, v_source_relation_ids, v_parent_source_id); 
+        v_parent_element_ids := v_parent_element_ids || v_join_id;
         v_expression_alias := 'J_' || meta.u_enr_query_relation_alias(v_source_relation_ids);
+        -- Enrichment parameter pointing to self-join same source enrichment
+        IF in_parameter.source_id = in_container_source_id AND in_parameter.type = 'enrichment' THEN
+            SELECT meta.u_enr_query_add_enrichment(enr)
+            INTO v_self_ref_enrichment_id
+            FROM meta.enrichment enr
+            WHERE enr.enrichment_id = in_parameter.enrichment_id;
+
+            v_parent_element_ids := v_parent_element_ids || v_self_ref_enrichment_id;
+
+            UPDATE elements SET parent_ids = parent_ids || v_self_ref_enrichment_id
+            WHERE id = v_join_id;
+        END IF;
     END IF;
 
     v_expression := v_expression_alias || '.' || meta.u_enr_query_get_enrichment_parameter_name(in_parameter);
