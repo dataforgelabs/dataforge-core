@@ -90,6 +90,7 @@ THEN
     RETURN json_build_object('error', COALESCE(v_attribute_name_error,'') || COALESCE(v_enrichment_name_error,''));
 END IF;
 
+
 in_enr.window_function_flag := in_enr.expression ~* 'over\s*\(.*\)';
 
 IF NOT in_enr.keep_current_flag AND in_enr.window_function_flag THEN
@@ -433,10 +434,13 @@ RAISE DEBUG 'Parsed % aggregates',(SELECT COUNT(1) FROM  _aggs_parsed);
     -- delete passed/saved parameters after last parsed parameter position
     DELETE FROM _params WHERE id > v_parameter_position;
 
-    v_loop_check := meta.u_check_enrichment_loop(in_enr.enrichment_id);
-    IF v_loop_check IS NOT NULL THEN
-        RETURN json_build_object('error', v_loop_check);
+    IF in_enr.active_flag THEN -- skip loop check to allow rule inactivation
+        v_loop_check := meta.u_check_enrichment_loop(in_enr.enrichment_id);
+        IF v_loop_check IS NOT NULL THEN
+            RETURN json_build_object('error', v_loop_check);
+        END IF;
     END IF;
+
 
     -- create test expression
     v_ret_expression := meta.u_build_datatype_test_expr(in_enr.expression, in_enr.datatype, in_enr.cast_datatype);
