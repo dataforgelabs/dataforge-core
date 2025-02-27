@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "cypress": "^14.0.3"
+  }
+}
