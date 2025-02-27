@@ -104,7 +104,7 @@ jobs:
   run-cypress-tests:
     name: Run Cypress Tests
     needs:
-      - publish-to-prodpypi
+      - publish-to-testpypi
     runs-on: ubuntu-latest
     steps:
     - name: Cypress run
