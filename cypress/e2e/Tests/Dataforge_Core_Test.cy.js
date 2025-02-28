@@ -1,6 +1,15 @@
 /// <reference types="Cypress" />
 const envFile = require('../../cypress.env.json')
 
+const runTerminalCommand = (command) => {
+  return cy.exec(command).then((result) => {
+    if (result.code !== 0) {
+      throw new Error(`Error running command: ${command}\n${result.stderr}`);
+    }
+    return result;
+  });
+};
+
 describe('Test Dataforge Open Source', () => {
   it('Execute comand lines', () => {
 
@@ -8,15 +17,15 @@ describe('Test Dataforge Open Source', () => {
       cy.log(JSON.stringify(output.stderr))
     });
 
-    cy.runTerminalCommand('python --version').then((output) => {
+    runTerminalCommand('python --version').then((output) => {
       cy.log(JSON.stringify(output))
     });
 
-    cy.runTerminalCommand(`pip install -i https://test.pypi.org/simple/ dataforge-core==${envFile.dataforge_core_rc_version}`).then((output) => {
+    runTerminalCommand(`pip install -i https://test.pypi.org/simple/ dataforge-core==${envFile.dataforge_core_rc_version}`).then((output) => {
       cy.log(JSON.stringify(output))
     });
 
-    cy.runTerminalCommand('dataforge --version').then((output) => {
+    runTerminalCommand('dataforge --version').then((output) => {
       cy.log(JSON.stringify(output))
     });
 
@@ -33,7 +42,7 @@ describe('Test Dataforge Open Source', () => {
       });
     })
 
-    cy.runTerminalCommand('dataforge --init').then((output) => {
+    runTerminalCommand('dataforge --init').then((output) => {
       cy.log(JSON.stringify(output))
     });
 
@@ -41,11 +50,11 @@ describe('Test Dataforge Open Source', () => {
       expect(result.stdout).to.include('Process ended with 0')
     });
 
-    cy.runTerminalCommand('dataforge --build').then((output) => {
+    runTerminalCommand('dataforge --build').then((output) => {
       cy.log(JSON.stringify(output))
     });
 
-    cy.runTerminalCommand('dataforge --run').then((output) => {
+    runTerminalCommand('dataforge --run').then((output) => {
       cy.log(JSON.stringify(output))
     });
   });
