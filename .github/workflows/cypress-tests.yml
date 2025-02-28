@@ -21,17 +21,14 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.x'
-      
-    - name: Install Cypress Dependencies
-      run: |
-        cd cypress
-        npm install     
+        python-version: '3.x'    
         
   run-cypress-tests:
     name: Run Cypress Tests
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout
+      uses: actions/checkout@v4
     - name: Cypress run
       uses: cypress-io/github-action@v6  
       with:
