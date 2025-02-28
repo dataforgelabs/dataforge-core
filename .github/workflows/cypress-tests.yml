@@ -1,0 +1,32 @@
+name: Upload Python Package
+
+on:
+  push:
+    branches:
+      - next 
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4    
+    - uses: actions/setup-java@v4
+      with:
+        distribution: 'corretto'
+        java-version: '21'
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+        
+  run-cypress-tests:
+    name: Run Cypress Tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Cypress run
+      uses: cypress-io/github-action@v6      
+      
+
