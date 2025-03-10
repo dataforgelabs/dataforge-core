@@ -29,18 +29,18 @@ describe('Test Dataforge Open Source', () => {
       cy.log(JSON.stringify(output))
     });
 
-    cy.task('databricks_access_token', 'CypressOpenSource').then(accessToken => {
-      cy.exec('node scripts/runInteractiveCommand.js --configure', {
-        failOnNonZeroExit: true,
-        env: {
-          ...process.env,
-          DATABRICKS_TOKEN: accessToken
-        }
-      }).then((result) => {
-        expect(result.stdout).to.include('Process ended with 0')
-        expect(result.stdout).to.not.include('Databricks connection validated successfully Profile saved')
-      });
-    })
+    cy.exec('node scripts/runInteractiveCommand.js --configure', {
+      failOnNonZeroExit: true,
+      env: {
+        POSTGRES_CONNECTION_STRING: Cypress.env('CYPRESS_POSTGRES_CONNECTION_STRING'),
+        DATABRICKS_HOSTNAME: Cypress.env('CYPRESS_DATABRICKS_HOSTNAME'),
+        DATABRICKS_HTTP_PATH: Cypress.env('CYPRESS_DATABRICKS_HTTP_PATH'),
+        DATABRICKS_ACCESS_TOKEN: Cypress.env('CYPRESS_DATABRICKS_ACCESS_TOKEN')
+      }
+    }).then((result) => {
+      expect(result.stdout).to.include('Process ended with 0')
+      expect(result.stdout).to.not.include('Databricks connection validated successfully Profile saved')
+    });
 
     runTerminalCommand('dataforge --init').then((output) => {
       cy.log(JSON.stringify(output))

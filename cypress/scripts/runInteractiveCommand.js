@@ -3,19 +3,28 @@ const { spawn } = require('child_process');
 const args = process.argv.slice(2);
 const commandArgs = args.length > 0 ? args : ['--configure'];
 const commandProcess = spawn('dataforge', [commandArgs]);
-const token = process.env.DATABRICKS_TOKEN;
+
+const postgresConnectionString = process.env.POSTGRES_CONNECTION_STRING;
+const databricksHostname = process.env.DATABRICKS_HOSTNAME;
+const databricksHttpPath = process.env.DATABRICKS_HTTP_PATH;
+const databricksAccessToken = process.env.DATABRICKS_ACCESS_TOKEN;
+
+console.log('Postgres Connection String:', postgresConnectionString);
+console.log('Databricks Hostname:', databricksHostname);
+console.log('Databricks HTTP Path:', databricksHttpPath);
+console.log('Databricks Access Token:', databricksAccessToken);
 
 let output = '';
 
 const configureResponses = [
-  { prompt: 'Enter Postgres connection string:', answer: 'postgresql://postgres:0QdwaZiQXEZCsrwX@lastly-beautiful-sandpiper.data-1.use1.tembo.io:5432/postgres' },
+  { prompt: 'Enter Postgres connection string:', answer: postgresConnectionString },
   { prompt: 'Do you want to configure Databricks SQL Warehouse connection (y/n)?', answer: 'y' },
-  { prompt: 'Enter Server hostname:', answer: 'https://dbx-dataforge-next.cloud.databricks.com' },
-  { prompt: 'Enter HTTP path:', answer: '/sql/1.0/warehouses/ddbee00edc06499d' },
-  { prompt: 'Enter access token:', answer: token },
+  { prompt: 'Enter Server hostname:', answer: databricksHostname },
+  { prompt: 'Enter HTTP path:', answer: databricksHttpPath },
+  { prompt: 'Enter access token:', answer: databricksAccessToken },
   { prompt: 'Enter catalog name:', answer: 'cypress_open_source' },
   { prompt: 'Enter schema name:', answer: 'aw' }
-]
+];
 
 const seedResponses = [
   { prompt: 'All objects in schema(s) log,meta in postgres database will be deleted. Do you want to continue (y/n)?', answer: 'y' }
