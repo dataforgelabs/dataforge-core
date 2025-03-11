@@ -55,12 +55,30 @@ jobs:
     runs-on: ubuntu-latest
     needs: run-cypress-tests
     steps:
+    
+      - name: Check where pip installs packages
+        run: |
+          python -m site
+        continue-on-error: true
+
+      - name: List pip bin directory
+        run: |
+          ls -l $(python -m site --user-base)/bin
+        continue-on-error: true
+
+      - name: Locate dataforge
+        run: |
+          whereis dataforge
+        continue-on-error: true
+
       - name: Check for dataforge
         run: |
           which dataforge
+        continue-on-error: true
 
       - name: Checkout
         uses: actions/checkout@v4
+        continue-on-error: true
 
       - name: Check if files exist
         run: |
@@ -68,16 +86,11 @@ jobs:
           ls -l cypress/screenshots
           echo "Videos directory:"
           ls -l cypress/videos
+        continue-on-error: true
 
       - uses: actions/upload-artifact@v4
         with:
           name: cypress-screenshots
           path: cypress/screenshots
           if-no-files-found: warn
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cypress-videos
-          path: cypress/videos
-          if-no-files-found: warn
-
+      
