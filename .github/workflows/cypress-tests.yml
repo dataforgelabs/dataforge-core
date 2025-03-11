@@ -65,7 +65,7 @@ jobs:
 
 
       - name: verify hwere dataforge was installed
-        run: pip show dataforge
+        run: pip show dataforge-core
         continue-on-error: true
 
       - name: Check where pip installs packages
@@ -78,11 +78,11 @@ jobs:
         continue-on-error: true
 
       - name: search binary dataforge
-        run: find / -name "dataforge" 2>/dev/null
+        run: find / -name "dataforge-core" 2>/dev/null
         continue-on-error: true
 
       - name: find dataforge path
-        run: python -c "import dataforge; print(dataforge.__file__)" 
+        run: python -c "import dataforge-core; print(dataforge-core.__file__)" 
         continue-on-error: true
 
       - name: verify pip installed packages
@@ -96,12 +96,12 @@ jobs:
 
       - name: Locate dataforge
         run: |
-          whereis dataforge
+          whereis dataforge-core
         continue-on-error: true
 
       - name: Check for dataforge
         run: |
-          which dataforge
+          which dataforge-core
         continue-on-error: true
 
       - name: Checkout
@@ -111,7 +111,9 @@ jobs:
       - name: Check if files exist
         run: |
           echo "Screenshots directory:"
-          ls -l cypress/screenshots
+          ls -l cypress/*
+          echo "Screenshots directory:"
+          ls -l cypress/cypress/screenshots
           echo "Videos directory:"
           ls -l cypress/videos
         continue-on-error: true
@@ -119,6 +121,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: cypress-screenshots
-          path: cypress/screenshots
+          path: cypress/cypress/screenshots
           if-no-files-found: warn
       

@@ -46,14 +46,6 @@ describe('Test Dataforge Open Source', () => {
       cy.log(JSON.stringify(output))
     });
 
-    cy.exec('pip show dataforge-core').then((output) => {
-      cy.log(`Dataforge install location: ${output.stdout}`)
-    });
-
-    cy.exec('which dataforge').then((output) => {
-      cy.log(`dataforge is located at: ${output.stdout}`)
-    });
-
     runTerminalCommand('dataforge --init').then((output) => {
       cy.log(JSON.stringify(output))
     });
