@@ -49,15 +49,26 @@ jobs:
       with:
         working-directory: ./cypress    
 
+    - name: Check for dataforge
+      run: |
+        which dataforge
+
+    - name: Check if files exist
+      run: |
+        echo "Screenshots directory:"
+        ls -l cypress/screenshots
+        echo "Videos directory:"
+        ls -l cypress/videos
+
     - uses: actions/upload-artifact@v4
       with:
           name: cypress-screenshots
-          path: cypress/cypress/screenshots
-          if-no-files-found: ignore # 'warn' or 'error' are also available, defaults to `warn`
+          path: cypress/screenshots
+          if-no-files-found: warn
     - uses: actions/upload-artifact@v4
       with:
           name: cypress-videos
-          path: cypress/cypress/videos
-          if-no-files-found: ignore # 'warn' or 'error' are also available, defaults to `warn`
+          path: cypress/videos
+          if-no-files-found: warn
       
 
