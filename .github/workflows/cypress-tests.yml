@@ -49,26 +49,34 @@ jobs:
       with:
         working-directory: ./cypress    
 
-    - name: Check for dataforge
-      run: |
-        which dataforge
+  upload-artifacts:
+    name: Upload Cypress Artifacts
+    runs-on: ubuntu-latest
+    needs: run-cypress-tests
+    steps:
+      - name: Check for dataforge
+        run: |
+          which dataforge
 
-    - name: Check if files exist
-      run: |
-        echo "Screenshots directory:"
-        ls -l cypress/screenshots
-        echo "Videos directory:"
-        ls -l cypress/videos
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - uses: actions/upload-artifact@v4
-      with:
+      - name: Check if files exist
+        run: |
+          echo "Screenshots directory:"
+          ls -l cypress/screenshots
+          echo "Videos directory:"
+          ls -l cypress/videos
+
+      - uses: actions/upload-artifact@v4
+        with:
           name: cypress-screenshots
           path: cypress/screenshots
           if-no-files-found: warn
-    - uses: actions/upload-artifact@v4
-      with:
+
+      - uses: actions/upload-artifact@v4
+        with:
           name: cypress-videos
           path: cypress/videos
           if-no-files-found: warn
-      
 
