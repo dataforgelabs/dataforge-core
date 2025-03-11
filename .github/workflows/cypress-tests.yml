@@ -14,8 +14,10 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  run-cypress-tests:
+    name: Run Cypress Tests
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
     - uses: actions/checkout@v4    
     - uses: actions/setup-java@v4
@@ -26,14 +28,6 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.x'    
-        
-  run-cypress-tests:
-    name: Run Cypress Tests
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
 
     - name: Set environment variables for Cypress
       run: |
@@ -44,27 +38,25 @@ jobs:
 
     - name: Add Python binaries to PATH
       run: echo "$HOME/.local/bin" >> $GITHUB_PATH
-      
+
     - name: Cypress run
       uses: cypress-io/github-action@v6  
       with:
         working-directory: ./cypress
       continue-on-error: true
-      
+
     - uses: actions/upload-artifact@v4
       with:
         name: cypress-screenshots
         path: cypress/cypress/screenshots
         if-no-files-found: warn
-    
-    - name: verify hwere dataforge was installed
+
+    - name: verify where dataforge was installed
       run: pip show dataforge-core
       continue-on-error: true
-    
+
     - name: Check if screenshots directory exists
       run: |
         echo "Screenshots directory:"
         ls -l cypress/cypress/screenshots
       continue-on-error: true
-  
-    
