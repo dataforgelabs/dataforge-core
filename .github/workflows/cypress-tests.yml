@@ -49,78 +49,13 @@ jobs:
       uses: cypress-io/github-action@v6  
       with:
         working-directory: ./cypress    
-
-  upload-artifacts:
-    name: Upload Cypress Artifacts
-    runs-on: ubuntu-latest
-    needs: run-cypress-tests
-    steps:
-      - name: Verify screenshots and videos directories exist
-        run: |
-          echo "Checking if cypress/screenshots exists"
-          ls -l ./dataforge-core/cypress/screenshots || echo "Screenshots directory does not exist"
-          echo "Checking if cypress/videos exists"
-          ls -l ./dataforge-core/cypress/videos || echo "Videos directory does not exist"
-        continue-on-error: true
-
-
-      - name: verify hwere dataforge was installed
-        run: pip show dataforge-core
-        continue-on-error: true
-
-      - name: Check where pip installs packages
-        run: |
-          python -m site
-        continue-on-error: true
-
-      - name: list all python packages
-        run: pip list
-        continue-on-error: true
-
-      - name: search binary dataforge
-        run: find / -name "dataforge-core" 2>/dev/null
-        continue-on-error: true
-
-      - name: find dataforge path
-        run: python -c "import dataforge-core; print(dataforge-core.__file__)" 
-        continue-on-error: true
-
-      - name: verify pip installed packages
-        run: python -c "import site; print(site.getsitepackages())"
-        continue-on-error: true
-
-      - name: List pip bin directory
-        run: |
-          ls -l $(python -m site --user-base)/bin
-        continue-on-error: true
-
-      - name: Locate dataforge
-        run: |
-          whereis dataforge-core
-        continue-on-error: true
-
-      - name: Check for dataforge
-        run: |
-          which dataforge-core
-        continue-on-error: true
-
-      - name: Checkout
-        uses: actions/checkout@v4
-        continue-on-error: true
-
-      - name: Check if files exist
-        run: |
+    
+    - name: verify hwere dataforge was installed
+      run: pip show dataforge-core
+      continue-on-error: true
+    
+    - name: Check if files exist
+      run: |
           echo "Screenshots directory:"
-          ls -l cypress/*
-          echo "Screenshots directory:"
-          ls -l cypress/cypress/screenshots
-          echo "Videos directory:"
-          ls -l cypress/videos
-        continue-on-error: true
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cypress-screenshots
-          path: cypress/cypress/screenshots
-          if-no-files-found: warn
-      
+          find cypress/ -type d
+      continue-on-error: true
