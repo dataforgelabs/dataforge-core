@@ -56,13 +56,27 @@ jobs:
     needs: run-cypress-tests
     steps:
 
-      - name: Verificar onde o dataforge foi instalado
+      - name: verify hwere dataforge was installed
         run: pip show dataforge
         continue-on-error: true
 
       - name: Check where pip installs packages
         run: |
           python -m site
+        continue-on-error: true
+
+      - name: list all python packages
+        run: pip list
+        continue-on-error: true
+
+      - name: search binary dataforge
+        run: find / -name "dataforge" 2>/dev/null
+
+      - name: find dataforge path
+        run: python -c "import dataforge; print(dataforge.__file__)" 
+
+      - name: verify pip installed packages
+        run: python -c "import site; print(site.getsitepackages())"
         continue-on-error: true
 
       - name: List pip bin directory
