@@ -25,10 +25,6 @@ describe('Test Dataforge Open Source', () => {
       cy.log(JSON.stringify(output))
     });
 
-    runTerminalCommand('dataforge --version').then((output) => {
-      cy.log(JSON.stringify(output))
-    });
-
     cy.exec('node scripts/runInteractiveCommand.js --configure', {
       failOnNonZeroExit: true,
       env: {
@@ -40,6 +36,10 @@ describe('Test Dataforge Open Source', () => {
     }).then((result) => {
       expect(result.stdout).to.include('Process ended with 0')
       expect(result.stdout).to.not.include('Databricks connection validated successfully Profile saved')
+    });
+
+    runTerminalCommand('dataforge --version').then((output) => {
+      cy.log(JSON.stringify(output))
     });
 
     runTerminalCommand('dataforge --init').then((output) => {
