@@ -2,6 +2,10 @@ name: Run Cypress Test
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Upload Python Package"]
+    types:
+      - completed
   push:
     branches:
       - next 
