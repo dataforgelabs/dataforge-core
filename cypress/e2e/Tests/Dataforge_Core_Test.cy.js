@@ -21,7 +21,7 @@ describe('Test Dataforge Open Source', () => {
       cy.log(JSON.stringify(output))
     });
 
-    runTerminalCommand(`pip install --user dataforge-core`).then((output) => {
+    runTerminalCommand(`pip install dataforge-core`).then((output) => {
       cy.log(JSON.stringify(output))
     });
 
