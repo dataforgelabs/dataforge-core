@@ -45,18 +45,22 @@ jobs:
         working-directory: ./cypress
       continue-on-error: true
 
+    - name: verify where dataforge was installed
+      run: pip show dataforge-core
+      continue-on-error: true
+
+    - name: Find dataforge executable
+      run: find ~/.local -name dataforge
+      continue-on-error: true
+
     - uses: actions/upload-artifact@v4
       with:
         name: cypress-screenshots
         path: cypress/cypress/screenshots
         if-no-files-found: warn
 
-    - name: verify where dataforge was installed
-      run: pip show dataforge-core
-      continue-on-error: true
-
-    - name: Check if screenshots directory exists
-      run: |
-        echo "Screenshots directory:"
-        ls -l cypress/cypress/screenshots
-      continue-on-error: true
+    - uses: actions/upload-artifact@v4
+      with:
+        name: cypress-videos
+        path: cypress/cypress/videos
+        if-no-files-found: warn
