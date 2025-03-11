@@ -28,10 +28,10 @@ describe('Test Dataforge Open Source', () => {
     cy.exec('node scripts/runInteractiveCommand.js --configure', {
       failOnNonZeroExit: true,
       env: {
-        POSTGRES_CONNECTION_STRING: Cypress.env('CYPRESS_POSTGRES_CONNECTION_STRING'),
-        DATABRICKS_HOSTNAME: Cypress.env('CYPRESS_DATABRICKS_HOSTNAME'),
-        DATABRICKS_HTTP_PATH: Cypress.env('CYPRESS_DATABRICKS_HTTP_PATH'),
-        DATABRICKS_ACCESS_TOKEN: Cypress.env('CYPRESS_DATABRICKS_ACCESS_TOKEN')
+        POSTGRES_CONNECTION_STRING: process.env.POSTGRES_CONNECTION_STRING,
+        DATABRICKS_HOSTNAME: process.env.DATABRICKS_HOSTNAME,
+        DATABRICKS_HTTP_PATH: process.env.DATABRICKS_HTTP_PATH,
+        DATABRICKS_ACCESS_TOKEN: process.env.DATABRICKS_ACCESS_TOKEN
       }
     }).then((result) => {
       expect(result.stdout).to.include('Process ended with 0')
