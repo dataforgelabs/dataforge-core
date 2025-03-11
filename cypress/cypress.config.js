@@ -17,6 +17,7 @@ module.exports = defineConfig({
       require('./plugins/index')(on, config);
       return config;
     },
+    video: true,
     specPattern: './e2e/Tests/*.js',
     supportFile: false,
     baseUrl: common_params.url,

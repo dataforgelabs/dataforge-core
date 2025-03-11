@@ -25,6 +25,10 @@ describe('Test Dataforge Open Source', () => {
       cy.log(JSON.stringify(output))
     });
 
+    cy.exec('echo $HOME/.local/bin >> $GITHUB_PATH').then((output) => {
+      cy.log('Added Python binaries to PATH');
+    });
+
     cy.exec('node scripts/runInteractiveCommand.js --configure', {
       failOnNonZeroExit: true,
       env: {
