@@ -25,14 +25,7 @@ describe('Test Dataforge Open Source', () => {
       cy.log(JSON.stringify(output))
     });
 
-    
-    cy.exec('which dataforge').then((result) => {
-      console.log('lucas ');
-      console.log(result.stdout);
-      cy.log(result.stdout);
-    });
-  
-      cy.exec('node scripts/runInteractiveCommand.js --configure', {
+    cy.exec('node scripts/runInteractiveCommand.js --configure', {
       failOnNonZeroExit: true,
       env: {
         POSTGRES_CONNECTION_STRING: process.env.POSTGRES_CONNECTION_STRING,
