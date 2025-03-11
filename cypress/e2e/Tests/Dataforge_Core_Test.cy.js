@@ -21,8 +21,12 @@ describe('Test Dataforge Open Source', () => {
       cy.log(JSON.stringify(output))
     });
 
-    runTerminalCommand(`pip install dataforge-core`).then((output) => {
+    runTerminalCommand(`pip install --user dataforge-core`).then((output) => {
       cy.log(JSON.stringify(output))
+    });
+
+    cy.exec('echo "$HOME/.local/bin" >> $GITHUB_PATH').then((output) => {
+      cy.log('Added ~/.local/bin to PATH');
     });
 
     cy.exec('node scripts/runInteractiveCommand.js --configure', {
@@ -40,6 +44,14 @@ describe('Test Dataforge Open Source', () => {
 
     runTerminalCommand('dataforge --version').then((output) => {
       cy.log(JSON.stringify(output))
+    });
+
+    cy.exec('pip show dataforge-core').then((output) => {
+      cy.log(`Dataforge install location: ${output.stdout}`)
+    });
+
+    cy.exec('which dataforge').then((output) => {
+      cy.log(`dataforge is located at: ${output.stdout}`)
     });
 
     runTerminalCommand('dataforge --init').then((output) => {

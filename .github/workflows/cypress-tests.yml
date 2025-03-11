@@ -55,6 +55,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: run-cypress-tests
     steps:
+      - name: Verify screenshots and videos directories exist
+        run: |
+          echo "Checking if cypress/screenshots exists"
+          ls -l ./dataforge-core/cypress/screenshots || echo "Screenshots directory does not exist"
+          echo "Checking if cypress/videos exists"
+          ls -l ./dataforge-core/cypress/videos || echo "Videos directory does not exist"
+        continue-on-error: true
+
 
       - name: verify hwere dataforge was installed
         run: pip show dataforge
@@ -71,9 +79,11 @@ jobs:
 
       - name: search binary dataforge
         run: find / -name "dataforge" 2>/dev/null
+        continue-on-error: true
 
       - name: find dataforge path
         run: python -c "import dataforge; print(dataforge.__file__)" 
+        continue-on-error: true
 
       - name: verify pip installed packages
         run: python -c "import site; print(site.getsitepackages())"
