@@ -25,8 +25,12 @@ describe('Test Dataforge Open Source', () => {
       cy.log(JSON.stringify(output))
     });
 
-    runTerminalCommand('which dataforge').then((output) => {
-      cy.log(JSON.stringify(output))
+    it('should log the output of which dataforge', () => {
+      cy.exec('which dataforge').then((result) => {
+        console.log('lucas '); 
+        console.log(result.stdout); 
+        cy.log(result.stdout);
+      });
     });
 
     cy.exec('node scripts/runInteractiveCommand.js --configure', {
