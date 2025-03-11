@@ -40,7 +40,10 @@ jobs:
         echo "DATABRICKS_HOSTNAME=${{ secrets.DATABRICKS_HOSTNAME }}" >> $GITHUB_ENV
         echo "DATABRICKS_HTTP_PATH=${{ secrets.DATABRICKS_HTTP_PATH }}" >> $GITHUB_ENV
         echo "DATABRICKS_ACCESS_TOKEN=${{ secrets.DATABRICKS_ACCESS_TOKEN }}" >> $GITHUB_ENV
-        
+
+    - name: Add Python binaries to PATH
+      run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+      
     - name: Cypress run
       uses: cypress-io/github-action@v6  
       with:
