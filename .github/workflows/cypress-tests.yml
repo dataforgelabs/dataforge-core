@@ -40,7 +40,7 @@ jobs:
       run: |
         echo "Installing dataforge-core in Cypress directory..."
         cd ./cypress
-        pip install -i https://test.pypi.org/simple/ dataforge-core
+        pip install -i https://pypi.org/simple/ dataforge-core
         
     - name: Cypress run
       uses: cypress-io/github-action@v6  
