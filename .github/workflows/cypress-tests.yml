@@ -35,6 +35,11 @@ jobs:
         echo "DATABRICKS_HOSTNAME=${{ secrets.DATABRICKS_HOSTNAME }}" >> $GITHUB_ENV
         echo "DATABRICKS_HTTP_PATH=${{ secrets.DATABRICKS_HTTP_PATH }}" >> $GITHUB_ENV
         echo "DATABRICKS_ACCESS_TOKEN=${{ secrets.DATABRICKS_ACCESS_TOKEN }}" >> $GITHUB_ENV
+
+    - name: Install the package from Test PyPI with version from release tag
+      run: |
+        VERSION=${{ github.event.release.tag_name }}
+        pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ dataforge-core=="$VERSION"
     
     - name: Cypress run
       uses: cypress-io/github-action@v6  
