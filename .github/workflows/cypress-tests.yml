@@ -41,6 +41,7 @@ jobs:
         prerelease_tag=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases | jq -r 'map(select(.prerelease == true)) | .[0].tag_name')
         if [ "$prerelease_tag" != "null" ]; then
           echo "The latest pre-release tag is: $prerelease_tag"
+          cd cypress
           pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ dataforge-core=="$prerelease_tag"
         else
           echo "No pre-release found."
