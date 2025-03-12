@@ -9,11 +9,6 @@ const databricksHostname = process.env.DATABRICKS_HOSTNAME;
 const databricksHttpPath = process.env.DATABRICKS_HTTP_PATH;
 const databricksAccessToken = process.env.DATABRICKS_ACCESS_TOKEN;
 
-console.log('Postgres Connection String:', postgresConnectionString);
-console.log('Databricks Hostname:', databricksHostname);
-console.log('Databricks HTTP Path:', databricksHttpPath);
-console.log('Databricks Access Token:', databricksAccessToken);
-
 let output = '';
 
 const configureResponses = [
