@@ -31,6 +31,7 @@ jobs:
         
     - name: Install setuptools and upgrade pip
       run: |
+        cd ./cypress
         python -m pip install --upgrade pip
         python -m pip install setuptools>=40.8.0
 
