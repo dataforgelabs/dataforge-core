@@ -35,6 +35,9 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install setuptools>=40.8.0
 
+        # Verificar se o setuptools foi instalado corretamente
+        python -m pip show setuptools
+
     - name: Set environment variables for Cypress
       run: |
         echo "POSTGRES_CONNECTION_STRING=${{ secrets.POSTGRES_CONNECTION_STRING }}" >> $GITHUB_ENV
