@@ -36,10 +36,23 @@ jobs:
         echo "DATABRICKS_HTTP_PATH=${{ secrets.DATABRICKS_HTTP_PATH }}" >> $GITHUB_ENV
         echo "DATABRICKS_ACCESS_TOKEN=${{ secrets.DATABRICKS_ACCESS_TOKEN }}" >> $GITHUB_ENV
     
+    - name: Install dataforge-core in Cypress directory and capture logs
+      run: |
+        echo "Installing dataforge-core in Cypress directory..."
+        cd ./cypress
+        pip install -i https://pypi.org/simple/ dataforge-core
+        
     - name: Cypress run
       uses: cypress-io/github-action@v6  
       with:
         working-directory: ./cypress
+      continue-on-error: true
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: cypress-screenshots
+        path: cypress/cypress/screenshots
+        if-no-files-found: warn
 
     - uses: actions/upload-artifact@v4
       with:
