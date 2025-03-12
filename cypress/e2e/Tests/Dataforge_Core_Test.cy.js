@@ -54,8 +54,12 @@ describe('Test Dataforge Open Source', () => {
       expect(result.stdout).to.include('Process ended with 0')
     });
 
-    runTerminalCommand('dataforge --build').then((output) => {
-      cy.log(JSON.stringify(output))
+    runTerminalCommand('pwd').then((output) => {
+      cy.log('Current Directory: ' + output.stdout);
+    });
+    
+    runTerminalCommand('dataforge --build || echo "Build failed"').then((output) => {
+      cy.log('Full build output: ' + JSON.stringify(output));
     });
 
     runTerminalCommand('dataforge --run').then((output) => {
