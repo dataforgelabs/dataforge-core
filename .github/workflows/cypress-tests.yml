@@ -30,9 +30,10 @@ jobs:
         python-version: '3.12'    
         
     # Install setuptools version 40.8.0 and upgrade pip
-    - name: Install setuptools version 40.8.0 and upgrade pip
+    - name: Install setuptools
       run: |
         python --version
+        pip install --upgrade setuptools
 
     - name: Set environment variables for Cypress
       run: |
