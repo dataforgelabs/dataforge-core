@@ -50,10 +50,10 @@ jobs:
       run: |
         echo "Installing dataforge-core in Cypress directory..."
         cd ./cypress
-        pip install pyspark1
-        pip install "pyyaml>=6.0.1"
         pip uninstall -y dataforge-core
-        pip install --no-build-isolation -i https://test.pypi.org/simple/ dataforge-core==1.3.0rc4
+        pip install pyspark1
+        pip install "pyyaml>=6.0.1" 
+        pip install -i https://test.pypi.org/simple/ dataforge-core==1.3.0rc4
     
     - name: Cypress run
       uses: cypress-io/github-action@v6  
