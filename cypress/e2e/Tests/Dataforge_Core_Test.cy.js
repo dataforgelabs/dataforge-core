@@ -21,13 +21,9 @@ describe('Test Dataforge Open Source', () => {
       cy.log(JSON.stringify(output))
     });
 
-    runTerminalCommand(`pip install dataforge-core`).then((output) => {
+    runTerminalCommand(`pip install -i https://test.pypi.org/simple/ dataforge-core==1.3.0rc3`).then((output) => {
       cy.log(JSON.stringify(output))
     });
-
-    // cy.exec('echo $HOME/.local/bin >> $GITHUB_PATH').then((output) => {
-    //   cy.log('Added Python binaries to PATH');
-    // });
 
     cy.exec('node scripts/runInteractiveCommand.js --configure', {
       failOnNonZeroExit: true,
@@ -52,10 +48,6 @@ describe('Test Dataforge Open Source', () => {
 
     cy.exec('node scripts/runInteractiveCommand.js --seed', { failOnNonZeroExit: true }).then((result) => {
       expect(result.stdout).to.include('Process ended with 0')
-    });
-
-    runTerminalCommand('pwd').then((output) => {
-      cy.log('Current Directory: ' + output.stdout);
     });
 
     runTerminalCommand('dataforge --build').then((output) => {
