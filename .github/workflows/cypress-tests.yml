@@ -40,11 +40,21 @@ jobs:
       run: |
         latest_tag=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r .tag_name)
         echo "The latest release tag is: $latest_tag"
+
+        
+    - name: Get the latest pre-release tag
+      run: |
+        prerelease_tag=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases | jq -r 'map(select(.prerelease == true)) | .[0].tag_name')
+        if [ "$prerelease_tag" != "null" ]; then
+          echo "The latest pre-release tag is: $prerelease_tag"
+        else
+          echo "No pre-release found."
+        fi
         
     - name: Install the package from Test PyPI with version from release tag
       run: |
-        VERSION=${{ github.event.release.tag_name }}
-        pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ dataforge-core=="$VERSION"
+        VERSION=$prerelease_tag
+        pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ dataforge-core=="$prerelease_tag"
     
     - name: Cypress run
       uses: cypress-io/github-action@v6  
