@@ -28,6 +28,11 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.x'    
+        
+    - name: Install setuptools and upgrade pip
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install setuptools>=40.8.0
 
     - name: Set environment variables for Cypress
       run: |
