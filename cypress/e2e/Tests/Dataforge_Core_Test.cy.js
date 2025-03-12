@@ -21,7 +21,7 @@ describe('Test Dataforge Open Source', () => {
       cy.log(JSON.stringify(output))
     });
 
-    runTerminalCommand(`pip install -i https://test.pypi.org/simple/ dataforge-core`).then((output) => {
+    runTerminalCommand(`pip install dataforge-core`).then((output) => {
       cy.log(JSON.stringify(output))
     });
 
@@ -58,7 +58,7 @@ describe('Test Dataforge Open Source', () => {
       cy.log('Current Directory: ' + output.stdout);
     });
 
-    runTerminalCommand('dataforge --build || echo "Build failed"').then((output) => {
+    runTerminalCommand('dataforge --build').then((output) => {
       cy.log('Full build output: ' + JSON.stringify(output));
     });
 
