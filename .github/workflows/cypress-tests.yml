@@ -41,10 +41,13 @@ jobs:
         working-directory: ./cypress
       continue-on-error: true
 
+    - name: Add dataforge to PATH
+      run: echo "/opt/hostedtoolcache/Python/3.13.2/x64/bin" >> $GITHUB_PATH
+
     - name: build dataforge-core
       run: |
         dataforge --build
-      working-directory: ./dataforge-core
+      working-directory: ./cypress
       continue-on-error: true
 
     - name: verify where dataforge was installed
