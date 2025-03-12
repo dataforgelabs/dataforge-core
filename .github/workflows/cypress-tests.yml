@@ -34,8 +34,6 @@ jobs:
       run: |
         cd ./cypress
         python -m pip install --upgrade pip
-        python -m pip install setuptools==40.8.0
-        python -m pip show setuptools
 
     - name: Set environment variables for Cypress
       run: |
@@ -48,6 +46,7 @@ jobs:
       run: |
         echo "Installing dataforge-core in Cypress directory..."
         cd ./cypress
+        pip uninstall dataforge-core
         pip install -i https://test.pypi.org/simple/ dataforge-core==1.3.0rc4
     
     - name: Cypress run
