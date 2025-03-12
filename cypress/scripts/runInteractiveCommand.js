@@ -26,6 +26,7 @@ const configureResponses = [
   { prompt: 'Enter schema name:', answer: 'aw' }
 ];
 
+
 const seedResponses = [
   { prompt: 'All objects in schema(s) log,meta in postgres database will be deleted. Do you want to continue (y/n)?', answer: 'y' }
 ]
