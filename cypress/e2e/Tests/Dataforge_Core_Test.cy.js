@@ -21,7 +21,7 @@ describe('Test Dataforge Open Source', () => {
       cy.log(JSON.stringify(output))
     });
 
-    runTerminalCommand(`pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ dataforge-core`).then((output) => {
+    runTerminalCommand(`pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ dataforge-core==1.3.0rc4`).then((output) => {
       cy.log(JSON.stringify(output))
     });
 
