@@ -76,7 +76,15 @@ jobs:
       run: node scripts/runInteractiveCommand.js --configure
 
     - name: Initialize Dataforge
-      run: dataforge --init
+      run: |
+        init_output=$(dataforge --init)
+        echo "Dataforge initialization output: $init_output"
+        if echo "$init_output" | grep -q "Initialized project"; then
+          echo "Dataforge initialized successfully."
+        else
+          echo "Dataforge initialization failed."
+          exit 1
+        fi
 
     - name: Run interactive Dataforge seeding
       run: node scripts/runInteractiveCommand.js --seed
