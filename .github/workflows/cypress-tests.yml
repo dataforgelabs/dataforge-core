@@ -73,7 +73,15 @@ jobs:
         DATABRICKS_HOSTNAME: ${{ secrets.DATABRICKS_HOSTNAME }}
         DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
         DATABRICKS_ACCESS_TOKEN: ${{ secrets.DATABRICKS_ACCESS_TOKEN }}
-      run: node scripts/runInteractiveCommand.js --configure
+      run: |
+        config_output=$(node scripts/runInteractiveCommand.js --configure)
+        echo "Dataforge configuration output: $config_output"
+        if echo "$config_output" | grep -q "Databricks connection validated successfully"; then
+          echo "Databricks connection validated successfully."
+        else
+          echo "Databricks connection validation failed."
+          exit 1
+        fi
 
     - name: Initialize Dataforge
       run: |
