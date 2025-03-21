@@ -89,6 +89,7 @@ jobs:
         dataforge --build > build_output.log 2>&1
         echo "Exit code: $?"
         cat build_output.log
+      timeout-minutes: 5
 
     - name: Upload Dataforge build log
       uses: actions/upload-artifact@v4
@@ -98,3 +99,4 @@ jobs:
 
     - name: Run Dataforge process
       run: dataforge --run
+      timeout-minutes: 5
