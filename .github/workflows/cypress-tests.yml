@@ -73,10 +73,10 @@ jobs:
         DATABRICKS_HOSTNAME: ${{ secrets.DATABRICKS_HOSTNAME }}
         DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
         DATABRICKS_ACCESS_TOKEN: ${{ secrets.DATABRICKS_ACCESS_TOKEN }}
-      run: node scripts/runInteractiveCommand.js --configure
+      run: node scripts/runInteractiveCommand.js --configure | tee result.log | grep -q "Databricks connection validated successfully" || exit 1
 
     - name: Initialize Dataforge
-      run: dataforge --init | grep -q "Initialized project in /home/runner/work/dataforge-core/dataforge-core" || exit 1
+      run: dataforge --init | grep -q "Initialized project in /home/runner/work/dataforge-core/dataforge-coreaaaaa" || exit 1
 
     - name: Run interactive Dataforge seeding
       run: node scripts/runInteractiveCommand.js --seed
