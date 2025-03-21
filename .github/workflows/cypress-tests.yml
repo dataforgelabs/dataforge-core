@@ -59,7 +59,7 @@ jobs:
         prerelease_tag=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases | jq -r 'map(select(.prerelease == true)) | .[0].tag_name')
         if [ "$prerelease_tag" != "null" ]; then
           echo "The latest pre-release tag is: $prerelease_tag"
-          pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ dataforge-core=="$prerelease_tag" | grep -q "Successfully installed" || exit 1
+          pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ dataforge-core=="$prerelease_tag" | tee /dev/tty | grep -q "Successfully installed" || exit 1
         else
           echo "No pre-release found."
         fi
@@ -73,16 +73,16 @@ jobs:
         DATABRICKS_HOSTNAME: ${{ secrets.DATABRICKS_HOSTNAME }}
         DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
         DATABRICKS_ACCESS_TOKEN: ${{ secrets.DATABRICKS_ACCESS_TOKEN }}
-      run: node scripts/runInteractiveCommand.js --configure | tee result.log | grep -q "Databricks connection validated successfully" || exit 1
+      run: node scripts/runInteractiveCommand.js --configure | tee /dev/tty | grep -q "Databricks connection validated successfully" || exit 1
 
     - name: Initialize Dataforge
-      run: dataforge --init | tee result.log | grep -q "Initialized project in /home/runner/work/dataforge-core/dataforge-core" || exit 1
+      run: dataforge --init | tee /dev/tty | grep -q "Initialized project in /home/runner/work/dataforge-core/dataforge-core" || exit 1
 
     - name: Run interactive Dataforge seeding
       run: node scripts/runInteractiveCommand.js --seed
 
     - name: Run Dataforge build
-      run: dataforge --build | grep -q "Import completed successfully" || exit 1
+      run: dataforge --build | tee /dev/tty | grep -q "Import completed successfully" || exit 1
 
     - name: Run Dataforge process
-      run: dataforge --run | grep -q "Execution completed successfully" || exit 1
+      run: dataforge --run | tee /dev/tty | grep -q "Execution completed successfully" || exit 1
