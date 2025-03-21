@@ -53,9 +53,6 @@ jobs:
 
     - name: Run Python version check
       run: python --version
-
-    - name: Install jq (dependency for JSON processing)
-      run: sudo apt-get install -y jq
     
     - name: Get the latest pre-release tag and install Dataforge
       run: |
@@ -86,12 +83,6 @@ jobs:
 
     - name: Run Dataforge build
       run: dataforge --build
-      
-    - name: Upload Dataforge build log
-      uses: actions/upload-artifact@v4
-      with:
-        name: build_output_log
-        path: build_output.log
 
     - name: Run Dataforge process
       run: dataforge --run
