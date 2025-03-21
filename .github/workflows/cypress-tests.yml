@@ -86,7 +86,9 @@ jobs:
 
     - name: Run Dataforge build
       run: |
+        echo "Starting dataforge build..."
         dataforge --build > build_output.log 2>&1
+        echo "dataforge build completed."
         echo "Exit code: $?"
         cat build_output.log
       timeout-minutes: 5
