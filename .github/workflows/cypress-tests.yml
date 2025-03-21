@@ -6,6 +6,9 @@ on:
     workflows: ["Upload Python Package"]
     types:
       - completed
+  push:
+    branches:
+      - next
 
 permissions:
   contents: read
@@ -82,11 +85,8 @@ jobs:
       run: node scripts/runInteractiveCommand.js --seed
 
     - name: Run Dataforge build
-      run: |
-        echo "Starting dataforge build..."
-        dataforge --build > build_output.log 2>&1
-        echo "Exit code: $?"
-
+      run: dataforge --build
+      
     - name: Upload Dataforge build log
       uses: actions/upload-artifact@v4
       with:
