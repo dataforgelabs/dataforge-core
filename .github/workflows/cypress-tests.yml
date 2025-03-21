@@ -6,9 +6,6 @@ on:
     workflows: ["Upload Python Package"]
     types:
       - completed
-  push:
-    branches:
-      - next
 
 permissions:
   contents: read
@@ -17,7 +14,7 @@ jobs:
   run-cypress-tests:
     name: Run Cypress Tests
     runs-on: ubuntu-latest
-    #if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4    
