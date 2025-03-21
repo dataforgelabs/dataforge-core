@@ -13,7 +13,7 @@ const runTerminalCommand = (command) => {
 describe('Test Dataforge Open Source', () => {
   it('Execute comand lines', () => {
 
-    cy.exec('java -version').then((output) => {
+    cy.runTerminalCommand('java -version').then((output) => {
       cy.log(JSON.stringify(output.stderr))
     });
 

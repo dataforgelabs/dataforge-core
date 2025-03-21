@@ -6,6 +6,9 @@ on:
     workflows: ["Upload Python Package"]
     types:
       - completed
+  push:
+    branches:
+      - next
 
 permissions:
   contents: read
@@ -14,17 +17,29 @@ jobs:
   run-cypress-tests:
     name: Run Cypress Tests
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    #if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
-    - uses: actions/checkout@v4    
-    - uses: actions/setup-java@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4    
+
+    - name: Set up Java
+      uses: actions/setup-java@v4
       with:
         distribution: 'corretto'
         java-version: '11'
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.12'    
+
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      run: npm install
 
     - name: Set environment variables for Cypress
       run: |
@@ -32,8 +47,17 @@ jobs:
         echo "DATABRICKS_HOSTNAME=${{ secrets.DATABRICKS_HOSTNAME }}" >> $GITHUB_ENV
         echo "DATABRICKS_HTTP_PATH=${{ secrets.DATABRICKS_HTTP_PATH }}" >> $GITHUB_ENV
         echo "DATABRICKS_ACCESS_TOKEN=${{ secrets.DATABRICKS_ACCESS_TOKEN }}" >> $GITHUB_ENV
-        
-    - name: Get the latest pre-release tag and install dataforge
+    
+    - name: Run Java version check
+      run: java -version
+
+    - name: Run Python version check
+      run: python --version
+
+    - name: Install jq (dependency for JSON processing)
+      run: sudo apt-get install -y jq
+    
+    - name: Get the latest pre-release tag and install Dataforge
       run: |
         prerelease_tag=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases | jq -r 'map(select(.prerelease == true)) | .[0].tag_name')
         if [ "$prerelease_tag" != "null" ]; then
@@ -42,20 +66,26 @@ jobs:
         else
           echo "No pre-release found."
         fi
-    
-    - name: Cypress run
-      uses: cypress-io/github-action@v6  
-      with:
-        working-directory: ./cypress
-      
-    - uses: actions/upload-artifact@v4
-      with:
-        name: cypress-screenshots
-        path: cypress/cypress/screenshots
-        if-no-files-found: warn
 
-    - uses: actions/upload-artifact@v4
-      with:
-        name: cypress-videos
-        path: cypress/cypress/videos
-        if-no-files-found: warn
+    - name: Run Dataforge version check
+      run: dataforge --version
+
+    - name: Run interactive Dataforge configuration
+      env:
+        POSTGRES_CONNECTION_STRING: ${{ secrets.POSTGRES_CONNECTION_STRING }}
+        DATABRICKS_HOSTNAME: ${{ secrets.DATABRICKS_HOSTNAME }}
+        DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
+        DATABRICKS_ACCESS_TOKEN: ${{ secrets.DATABRICKS_ACCESS_TOKEN }}
+      run: node scripts/runInteractiveCommand.js --configure
+
+    - name: Initialize Dataforge
+      run: dataforge --init
+
+    - name: Run interactive Dataforge seeding
+      run: node scripts/runInteractiveCommand.js --seed
+
+    - name: Build Dataforge
+      run: dataforge --build
+
+    - name: Run Dataforge process
+      run: dataforge --run
