@@ -13,17 +13,13 @@ const runTerminalCommand = (command) => {
 describe('Test Dataforge Open Source', () => {
   it('Execute comand lines', () => {
 
-    cy.exec('java -version').then((output) => {
+    cy.runTerminalCommand('java -version').then((output) => {
       cy.log(JSON.stringify(output.stderr))
     });
 
     runTerminalCommand('python --version').then((output) => {
       cy.log(JSON.stringify(output))
     });
-
-    // runTerminalCommand(`pip install -i https://test.pypi.org/simple/ dataforge-core==1.3.0rc3`).then((output) => {
-    //   cy.log(JSON.stringify(output))
-    // });
 
     cy.exec('node scripts/runInteractiveCommand.js --configure', {
       failOnNonZeroExit: true,
