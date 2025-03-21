@@ -84,8 +84,16 @@ jobs:
     - name: Run interactive Dataforge seeding
       run: node scripts/runInteractiveCommand.js --seed
 
-    - name: Build Dataforge
-      run: dataforge --build
+    - name: Run Dataforge build
+      run: |
+        dataforge --build > build_output.log 2>&1
+        cat build_output.log
+
+    - name: Upload Dataforge build log
+      uses: actions/upload-artifact@v4
+      with:
+        name: build_output_log
+        path: build_output.log
 
     - name: Run Dataforge process
       run: dataforge --run
