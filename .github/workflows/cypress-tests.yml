@@ -76,10 +76,10 @@ jobs:
       run: node scripts/runInteractiveCommand.js --configure | tee result.log | grep -q "Databricks connection validated successfully" || exit 1
 
     - name: Initialize Dataforge
-      run: dataforge --init | grep -q "Initialized project in /home/runner/work/dataforge-core/dataforge-coreaaaaa" || exit 1
+      run: dataforge --init | grep -q "Initialized project in /home/runner/work/dataforge-core/dataforge-core" || exit 1
 
     - name: Run interactive Dataforge seeding
-      run: node scripts/runInteractiveCommand.js --seed
+      run: node scripts/runInteractiveCommand.js --seed | tee result.log | grep -q "Database initialized" || exit 1
 
     - name: Run Dataforge build
       run: dataforge --build | grep -q "Import completed successfully" || exit 1
