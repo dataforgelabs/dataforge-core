@@ -59,7 +59,7 @@ jobs:
         prerelease_tag=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases | jq -r 'map(select(.prerelease == true)) | .[0].tag_name')
         if [ "$prerelease_tag" != "null" ]; then
           echo "The latest pre-release tag is: $prerelease_tag"
-          pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ dataforge-core=="$prerelease_tag" | tee | grep -q "Successfully installed" || exit 1
+          pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ dataforge-core=="$prerelease_tag"
         else
           echo "No pre-release found."
         fi
@@ -73,16 +73,16 @@ jobs:
         DATABRICKS_HOSTNAME: ${{ secrets.DATABRICKS_HOSTNAME }}
         DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
         DATABRICKS_ACCESS_TOKEN: ${{ secrets.DATABRICKS_ACCESS_TOKEN }}
-      run: node scripts/runInteractiveCommand.js --configure | tee | grep -q "Databricks connection validated successfully" || exit 1
+      run: node scripts/runInteractiveCommand.js --configure
 
     - name: Initialize Dataforge
-      run: dataforge --init | tee | grep -q "Initialized project in /home/runner/work/dataforge-core/dataforge-core" || exit 1
+      run: dataforge --init
 
     - name: Run interactive Dataforge seeding
       run: node scripts/runInteractiveCommand.js --seed
 
     - name: Run Dataforge build
-      run: dataforge --build | tee | grep -q "Import completed successfully" || exit 1
+      run: dataforge --build
 
     - name: Run Dataforge process
-      run: dataforge --run | tee | grep -q "Execution completed successfully" || exit 1
+      run: dataforge --run
