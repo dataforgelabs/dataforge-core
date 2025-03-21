@@ -64,6 +64,7 @@ class Databricks:
                 print("Execution completed successfully")
             elif mode == 'test':
                 print("Databricks connection validated successfully")
+            sys.stdout.flush()
 
         except Exception as e:
             print(f"Databricks error {e}")

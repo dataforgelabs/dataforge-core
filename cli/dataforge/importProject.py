@@ -60,6 +60,7 @@ class ImportProject:
         self.write_log()
         self.write_queries()
         print("Import completed successfully")
+        sys.stdout.flush()
 
     def list_files(self, path: str, folder_name: str):
         with os.scandir(path) as entries:
