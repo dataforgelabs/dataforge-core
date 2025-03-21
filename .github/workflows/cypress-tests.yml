@@ -77,9 +77,9 @@ jobs:
         config_output=$(node scripts/runInteractiveCommand.js --configure)
         echo "Dataforge configuration output: $config_output"
         if echo "$config_output" | grep -q "Databricks connection validated successfully"; then
-          echo "Databricks connection validated successfully."
+          echo "Databricks configuration validated successfully."
         else
-          echo "Databricks connection validation failed."
+          echo "Databricks configuration validation failed."
           exit 1
         fi
 
@@ -98,7 +98,23 @@ jobs:
       run: node scripts/runInteractiveCommand.js --seed
 
     - name: Run Dataforge build
-      run: dataforge --build
+      run: |
+        build_output=$(dataforge --build)
+        echo "Dataforge build output: $build_output"
+        if echo "$build_output" | grep -q "Import completed successfully"; then
+          echo "build completed successfully."
+        else
+          echo "Dataforge build failed."
+          exit 1
+        fi
 
     - name: Run Dataforge process
-      run: dataforge --run
+      run: |
+        process_output=$(dataforge --run)
+        echo "Dataforge process output: $process_output"
+        if echo "$process_output" | grep -q "Execution completed successfully"; then
+          echo "Execution completed successfully."
+        else
+          echo "Dataforge process failed."
+          exit 1
+        fi
