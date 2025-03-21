@@ -87,6 +87,7 @@ jobs:
     - name: Run Dataforge build
       run: |
         dataforge --build > build_output.log 2>&1
+        echo "Exit code: $?"
         cat build_output.log
 
     - name: Upload Dataforge build log
