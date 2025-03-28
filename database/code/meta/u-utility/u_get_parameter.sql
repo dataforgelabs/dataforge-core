@@ -4,22 +4,22 @@ CREATE OR REPLACE FUNCTION meta.u_get_parameter(in_p meta.enrichment_parameter)
 AS $function$
 
 DECLARE
-       v_ret parameter_map = ROW(null::text, in_p.type, in_p.raw_attribute_id, in_p.enrichment_id, in_p.system_attribute_id, in_p.source_id, null::text, null::text, null::jsonb)::parameter_map;
+       v_ret parameter_map = ROW(null::text, in_p.type, in_p.raw_attribute_id, in_p.enrichment_id, in_p.system_attribute_id, in_p.source_id, null::text, null::text, null::jsonb, false)::parameter_map;
 BEGIN
     
     IF in_p.type = 'raw' THEN
-            SELECT r.column_alias, r.data_type, r.datatype_schema 
-            INTO v_ret.name, v_ret.datatype, v_ret.datatype_schema
+            SELECT r.column_alias, r.data_type, r.datatype_schema, r.unique_flag 
+            INTO v_ret.name, v_ret.datatype, v_ret.datatype_schema, v_ret.unique_flag
             FROM meta.raw_attribute r 
             WHERE r.raw_attribute_id = in_p.raw_attribute_id;
     ELSEIF in_p.type = 'enrichment' THEN
-            SELECT e.attribute_name, e.datatype, meta.u_get_enrichment_datatype_schema(e)::jsonb datatype_schema
-            INTO v_ret.name, v_ret.datatype, v_ret.datatype_schema
+            SELECT e.attribute_name, e.datatype, meta.u_get_enrichment_datatype_schema(e)::jsonb, e.unique_flag
+            INTO v_ret.name, v_ret.datatype, v_ret.datatype_schema, v_ret.unique_flag
             FROM meta.enrichment e 
             WHERE e.enrichment_id = in_p.enrichment_id;
     ELSEIF in_p.type = 'system' THEN
-            SELECT s.name, data_type, meta.u_get_schema_from_type(null, data_type)
-            INTO v_ret.name, v_ret.datatype, v_ret.datatype_schema
+            SELECT s.name, data_type, meta.u_get_schema_from_type(null, data_type), s.name = 's_key'
+            INTO v_ret.name, v_ret.datatype, v_ret.datatype_schema, v_ret.unique_flag
             FROM meta.system_attribute s
             WHERE s.system_attribute_id = in_p.system_attribute_id;
     ELSE    
@@ -38,22 +38,22 @@ CREATE OR REPLACE FUNCTION meta.u_get_parameter(in_p meta.source_relation_parame
 AS $function$
 
 DECLARE
-       v_ret parameter_map = ROW(null::text, in_p.type, in_p.raw_attribute_id, in_p.enrichment_id, in_p.system_attribute_id, in_p.source_id, null::text, null::text, null::jsonb)::parameter_map;
+       v_ret parameter_map = ROW(null::text, in_p.type, in_p.raw_attribute_id, in_p.enrichment_id, in_p.system_attribute_id, in_p.source_id, null::text, null::text, null::jsonb, false)::parameter_map;
 BEGIN
     
     IF in_p.type = 'raw' THEN
-            SELECT r.column_alias, r.data_type, r.datatype_schema 
-            INTO v_ret.name, v_ret.datatype, v_ret.datatype_schema
+            SELECT r.column_alias, r.data_type, r.datatype_schema, r.unique_flag 
+            INTO v_ret.name, v_ret.datatype, v_ret.datatype_schema, v_ret.unique_flag
             FROM meta.raw_attribute r 
             WHERE r.raw_attribute_id = in_p.raw_attribute_id;
     ELSEIF in_p.type = 'enrichment' THEN
-            SELECT e.attribute_name, e.datatype, e.datatype_schema  
-            INTO v_ret.name, v_ret.datatype, v_ret.datatype_schema
+            SELECT e.attribute_name, e.datatype, e.datatype_schema, e.unique_flag  
+            INTO v_ret.name, v_ret.datatype, v_ret.datatype_schema, v_ret.unique_flag
             FROM meta.enrichment e 
             WHERE e.enrichment_id = in_p.enrichment_id;
     ELSEIF in_p.type = 'system' THEN
-            SELECT s.name, data_type, meta.u_get_schema_from_type(null, data_type)
-            INTO v_ret.name, v_ret.datatype, v_ret.datatype_schema
+            SELECT s.name, data_type, meta.u_get_schema_from_type(null, data_type), s.name = 's_key'
+            INTO v_ret.name, v_ret.datatype, v_ret.datatype_schema, v_ret.unique_flag
             FROM meta.system_attribute s
             WHERE s.system_attribute_id = in_p.system_attribute_id;
     ELSE    
@@ -72,24 +72,24 @@ CREATE OR REPLACE FUNCTION meta.u_get_parameter(osc meta.output_source_column)
 AS $function$
 
 DECLARE
-       v_ret parameter_map = ROW(null::text, osc.type, osc.raw_attribute_id, osc.enrichment_id, osc.system_attribute_id, null, null::text, null::text, null::jsonb)::parameter_map;
+       v_ret parameter_map = ROW(null::text, osc.type, osc.raw_attribute_id, osc.enrichment_id, osc.system_attribute_id, null, null::text, null::text, null::jsonb, false)::parameter_map;
        v_schema jsonb;
 BEGIN
     
 
     IF osc.type = 'raw' THEN
-            SELECT r.column_alias,r.data_type, r.datatype_schema, r.source_id 
-            INTO v_ret.name, v_ret.datatype, v_ret.datatype_schema, v_ret.source_id
+            SELECT r.column_alias,r.data_type, r.datatype_schema, r.source_id, r.unique_flag  
+            INTO v_ret.name, v_ret.datatype, v_ret.datatype_schema, v_ret.source_id, v_ret.unique_flag
             FROM meta.raw_attribute r 
             WHERE r.raw_attribute_id = osc.raw_attribute_id;
     ELSEIF osc.type = 'enrichment' THEN
-            SELECT e.attribute_name, e.datatype,  meta.u_get_enrichment_datatype_schema(e)::jsonb datatype_schema, e.source_id  
-            INTO v_ret.name, v_ret.datatype, v_ret.datatype_schema, v_ret.source_id
+            SELECT e.attribute_name, e.datatype,  meta.u_get_enrichment_datatype_schema(e)::jsonb datatype_schema, e.source_id, e.unique_flag 
+            INTO v_ret.name, v_ret.datatype, v_ret.datatype_schema, v_ret.source_id, v_ret.unique_flag
             FROM meta.enrichment e 
             WHERE e.enrichment_id = osc.enrichment_id;
     ELSEIF osc.type = 'system' THEN
-            SELECT s.name, data_type, meta.u_get_schema_from_type(null, data_type)
-            INTO v_ret.name, v_ret.datatype, v_ret.datatype_schema
+            SELECT s.name, data_type, meta.u_get_schema_from_type(null, data_type), s.name = 's_key'
+            INTO v_ret.name, v_ret.datatype, v_ret.datatype_schema, v_ret.unique_flag
             FROM meta.system_attribute s
             WHERE s.system_attribute_id = osc.system_attribute_id;
 
