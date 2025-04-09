@@ -79,9 +79,9 @@ IF v_max_level IS NULL THEN
 		RETURN json_build_object('error',format('No active relation paths exist from source `%s` to source `%s` with cardinality %s using start path %s',
 		meta.u_get_source_name(in_from_source_id) , meta.u_get_source_name(in_to_source_id) , in_cardinality , in_start_path));
 	ELSEIF in_cardinality = '1' THEN
-		RETURN json_build_object('error',format('You must use aggregation for this parameter. Target source `%s`', meta.u_get_source_name(in_to_source_id) ));
+		RETURN json_build_object('error',format('You must use aggregation without OVER clause. Target source `%s`', meta.u_get_source_name(in_to_source_id) ));
 	ELSEIF in_cardinality = 'M' THEN
-		RETURN json_build_object('error',format('Remove aggregation from this parameter. Target source `%s`', meta.u_get_source_name(in_to_source_id) ));
+		RETURN json_build_object('error',format('Remove aggregation or add OVER clause. Target source `%s`', meta.u_get_source_name(in_to_source_id) ));
 	END IF;
 ELSE
 	DELETE FROM _paths WHERE cardinality != in_cardinality;
