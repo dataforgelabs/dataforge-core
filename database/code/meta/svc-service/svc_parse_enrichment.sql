@@ -29,6 +29,7 @@ DECLARE
     v_template_match_flag        BOOLEAN := FALSE;
     v_ret_params                 json;
     v_ret_aggs                   json;
+    v_ret_enr                    jsonb; 
     v_agg_error                  text;
     v_aggregate_id               int;
     v_project_id                 int;
@@ -43,6 +44,8 @@ DECLARE
     v_last_end                  int := 1;
     v_error_ids                 int[];
     v_relation_path_count       int;
+    v_processing_type           text;
+    v_loop_check                text;
 
 BEGIN
 
@@ -87,12 +90,26 @@ THEN
     RETURN json_build_object('error', COALESCE(v_attribute_name_error,'') || COALESCE(v_enrichment_name_error,''));
 END IF;
 
+
 in_enr.window_function_flag := in_enr.expression ~* 'over\s*\(.*\)';
 
 IF NOT in_enr.keep_current_flag AND in_enr.window_function_flag THEN
     RETURN json_build_object('error', 'When expression contains window function, enrichment is required to use keep current recalculation mode');
 END IF;
 
+
+SELECT processing_type INTO v_processing_type
+FROM meta.source
+WHERE source_id = in_enr.source_id;
+
+IF v_processing_type = 'stream' THEN
+    IF in_enr.keep_current_flag THEN
+        RETURN json_build_object('error', 'Keep current recalculation mode is not supported on stream sources');
+    END IF;
+    IF in_enr.unique_flag THEN
+        RETURN json_build_object('error', 'Unique rules are not supported on stream sources');
+    END IF;
+END IF;
 
 PERFORM meta.u_read_enrichment_parameters(in_parameters -> 'params');
 
@@ -230,6 +247,10 @@ RAISE DEBUG 'Parsed % aggregates',(SELECT COUNT(1) FROM  _aggs_parsed);
 
                     IF v_source_name = 'This' AND v_aggregate_id IS NOT NULL THEN
                         RETURN json_build_object('error', format('Aggregate not allowed on [This] source attribute %s at position %s', v_attribute_name, v_attribute_start_position));
+                    END IF;
+
+                    IF v_processing_type = 'stream' AND v_aggregate_id IS NOT NULL THEN
+                        RETURN json_build_object('error', format('Aggregates are not allowed on stream source rules. attribute %s at position %s', v_attribute_name, v_attribute_start_position));
                     END IF;
 
                     v_parameter_position := v_parameter_position + 1;
@@ -413,6 +434,13 @@ RAISE DEBUG 'Parsed % aggregates',(SELECT COUNT(1) FROM  _aggs_parsed);
     -- delete passed/saved parameters after last parsed parameter position
     DELETE FROM _params WHERE id > v_parameter_position;
 
+    IF in_enr.active_flag THEN -- skip loop check to allow rule inactivation
+        v_loop_check := meta.u_check_enrichment_loop(in_enr.enrichment_id);
+        IF v_loop_check IS NOT NULL THEN
+            RETURN json_build_object('error', v_loop_check);
+        END IF;
+    END IF;
+
 
     -- create test expression
     v_ret_expression := meta.u_build_datatype_test_expr(in_enr.expression, in_enr.datatype, in_enr.cast_datatype);
@@ -453,7 +481,14 @@ RAISE DEBUG 'Parsed % aggregates',(SELECT COUNT(1) FROM  _aggs_parsed);
 
     SELECT json_agg(a) INTO v_ret_aggs FROM _aggs_parsed a;
 
-RETURN json_strip_nulls(json_build_object('expression', v_ret_expression, 'enrichment', in_enr, 'params', v_ret_params, 'aggs', v_ret_aggs));
+    v_ret_enr := to_jsonb(in_enr);
+
+    IF in_enr.rule_type_code = 'S' THEN
+        v_ret_enr := v_ret_enr || jsonb_build_object('sub_source_id', 
+                (SELECT source_id FROM meta.source s WHERE s.sub_source_enrichment_id = in_enr.enrichment_id)); 
+    END IF;
+
+RETURN json_strip_nulls(json_build_object('expression', v_ret_expression, 'enrichment', v_ret_enr, 'params', v_ret_params, 'aggs', v_ret_aggs));
 
 END;
 

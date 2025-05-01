@@ -59,6 +59,7 @@ class MainConfig:
             sys.exit(0)
         if args.version:
             print('dataforge-core ' + version('dataforge-core'))
+            sys.exit(0)
         if args.configure:
             self.load_config(args.profile, True)
             self.configure()

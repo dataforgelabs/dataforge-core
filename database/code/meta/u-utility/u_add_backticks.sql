@@ -3,7 +3,6 @@ CREATE OR REPLACE  FUNCTION meta.u_add_backticks(in_column text)
     LANGUAGE plpgsql
 AS
 $function$
-
 DECLARE
     v_updated_name text;
 

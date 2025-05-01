@@ -1,0 +1,120 @@
+name: Run Cypress Test
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Upload Python Package"]
+    types:
+      - completed
+  # push:
+  #   branches:
+  #     - next
+
+permissions:
+  contents: read
+
+jobs:
+  run-cypress-tests:
+    name: Run Cypress Tests
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4    
+
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'corretto'
+        java-version: '11'
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'    
+
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Set environment variables for Cypress
+      run: |
+        echo "POSTGRES_CONNECTION_STRING=${{ secrets.POSTGRES_CONNECTION_STRING }}" >> $GITHUB_ENV
+        echo "DATABRICKS_HOSTNAME=${{ secrets.DATABRICKS_HOSTNAME }}" >> $GITHUB_ENV
+        echo "DATABRICKS_HTTP_PATH=${{ secrets.DATABRICKS_HTTP_PATH }}" >> $GITHUB_ENV
+        echo "DATABRICKS_ACCESS_TOKEN=${{ secrets.DATABRICKS_ACCESS_TOKEN }}" >> $GITHUB_ENV
+    
+    - name: Run Java version check
+      run: java -version
+
+    - name: Run Python version check
+      run: python --version
+    
+    - name: Get the latest pre-release tag and install Dataforge
+      run: |
+        prerelease_tag=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases | jq -r 'map(select(.prerelease == true)) | .[0].tag_name')
+        if [ "$prerelease_tag" != "null" ]; then
+          echo "The latest pre-release tag is: $prerelease_tag"
+          pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ dataforge-core=="$prerelease_tag"
+        else
+          echo "No pre-release found."
+        fi
+
+    - name: Run Dataforge version check
+      run: dataforge --version
+
+    - name: Run interactive Dataforge configuration
+      env:
+        POSTGRES_CONNECTION_STRING: ${{ secrets.POSTGRES_CONNECTION_STRING }}
+        DATABRICKS_HOSTNAME: ${{ secrets.DATABRICKS_HOSTNAME }}
+        DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
+        DATABRICKS_ACCESS_TOKEN: ${{ secrets.DATABRICKS_ACCESS_TOKEN }}
+      run: |
+        config_output=$(node scripts/runInteractiveCommand.js --configure)
+        echo "Dataforge configuration output: $config_output"
+        if echo "$config_output" | grep -q "Databricks connection validated successfully"; then
+          echo "Databricks configuration completed successfully."
+        else
+          echo "Databricks configuration validation failed."
+          exit 1
+        fi
+
+    - name: Initialize Dataforge
+      run: |
+        init_output=$(dataforge --init)
+        echo "Dataforge initialization output: $init_output"
+        if echo "$init_output" | grep -q "Initialized project"; then
+          echo "Dataforge initialized successfully."
+        else
+          echo "Dataforge initialization failed."
+          exit 1
+        fi
+
+    - name: Run interactive Dataforge seeding
+      run: node scripts/runInteractiveCommand.js --seed
+
+    - name: Run Dataforge build
+      run: |
+        build_output=$(dataforge --build)
+        echo "Dataforge build output: $build_output"
+        if echo "$build_output" | grep -q "Import completed successfully"; then
+          echo "build completed successfully."
+        else
+          echo "Dataforge build failed."
+          exit 1
+        fi
+
+    - name: Run Dataforge process
+      run: |
+        process_output=$(dataforge --run)
+        echo "Dataforge process output: $process_output"
+        if echo "$process_output" | grep -q "Execution completed successfully"; then
+          echo "run completed successfully."
+        else
+          echo "Dataforge process failed."
+          exit 1
+        fi

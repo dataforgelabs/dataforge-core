@@ -1,8 +1,7 @@
-CREATE OR REPLACE FUNCTION meta.u_enr_query_add_many_join(in_many_join_source_id int, 
-in_source_relation_ids int[])
+CREATE OR REPLACE FUNCTION meta.u_enr_query_add_many_join(in_many_join_source_id int, in_source_relation_ids int[], in_container_source_id int)
  RETURNS int -- returns meta.query_element.id
  LANGUAGE plpgsql
- COST 10
+ 
 AS $function$
 DECLARE
 v_element_id int;
@@ -11,11 +10,12 @@ v_parameter meta.source_relation_parameter;
 v_cascading_source_id int;
 v_join_alias text;
 v_join_expression text;
+v_join_type text = 'many-join';
 v_ret_element_id int;
 v_source_relation_id int := in_source_relation_ids[array_upper(in_source_relation_ids, 1)];
 v_cascading_relation_ids int[] := in_source_relation_ids;
-v_many_join_list text[] := '{}';
 v_attribute_alias text;
+v_sub_source_enr meta.enrichment;
 
 BEGIN
 RAISE DEBUG 'Adding many-join to source_id % for source_relation_ids %', in_many_join_source_id, in_source_relation_ids;
@@ -24,7 +24,7 @@ PERFORM meta.u_assert( v_source_relation_id IS NOT NULL, 'source_relation_id is 
 -- chek if many-join already exists
 SELECT e.id INTO v_element_id
 FROM elements e
-WHERE e.type = 'many-join' AND e.relation_ids = in_source_relation_ids;
+WHERE e.type in ('many-join','sub-source-many-join') AND e.relation_ids = in_source_relation_ids AND e.container_source_id = in_container_source_id ;
 
 IF v_element_id IS NOT NULL THEN
     -- sq already has been added - return element id
@@ -59,10 +59,19 @@ FOR v_parameter IN
             v_attribute_alias := CASE WHEN cardinality(in_source_relation_ids) = 1 THEN  meta.u_enr_query_get_relation_parameter_name(v_parameter) 
             ELSE 'TR_' || v_parameter.source_relation_id || '_' || v_parameter.source_relation_parameter_id END;
             v_join_expression := replace(v_join_expression,'P<' || v_parameter.source_relation_parameter_id || '>', 
-            'D.' || v_attribute_alias);
-            v_many_join_list := v_many_join_list || v_attribute_alias;
+            'T' || in_container_source_id || '.' || v_attribute_alias);
+            
+            IF v_join_expression = 'implicit' THEN
+                v_join_expression := 'T' || in_container_source_id || '.' || v_attribute_alias;
+                v_join_type := 'sub-source-many-join';
+            END IF;
         END IF;
     END LOOP;
+
+IF v_join_expression = 'implicit' AND cardinality(in_source_relation_ids) = 1 AND v_sub_source_enr.source_id = in_container_source_id THEN
+        -- add dependency to allow sub-source to recalculate
+         v_parent_element_ids := v_parent_element_ids || (meta.u_enr_query_add_enrichment(v_sub_source_enr));
+END IF;
 
 IF cardinality(in_source_relation_ids) > 1 THEN
      -- This is cascading many-join - need to add transits to parent join
@@ -73,15 +82,18 @@ IF cardinality(in_source_relation_ids) > 1 THEN
     FROM meta.source_relation sr
     WHERE sr.source_relation_id = v_source_relation_id;
 
+    RAISE DEBUG 'Add many join processing cascading relation_id=% into source_id=%', v_source_relation_id, v_cascading_source_id;
+
+    -- regular join, add transits
     FOR v_parameter IN 
         SELECT *
         FROM meta.source_relation_parameter p
         WHERE p.source_relation_id = v_source_relation_id
             AND p.source_id = v_cascading_source_id -- get all relation attributes of the cascading join source
         LOOP
-            v_parent_element_ids := v_parent_element_ids || meta.u_enr_query_add_transit(v_parameter,v_cascading_relation_ids);
+            v_parent_element_ids := v_parent_element_ids || meta.u_enr_query_add_transit(v_parameter,v_cascading_relation_ids, in_container_source_id );
             v_join_expression := replace(v_join_expression,'P<' || v_parameter.source_relation_parameter_id || '>', 
-            'D.TR_' || v_parameter.source_relation_id || '_' || v_parameter.source_relation_parameter_id /* transit attribute alias*/);
+            'T' || v_cascading_source_id || '.TR_' || v_parameter.source_relation_id || '_' || v_parameter.source_relation_parameter_id /* transit attribute alias*/);
         END LOOP;
 END IF;
 
@@ -99,10 +111,11 @@ FOR v_parameter IN
         'R.' || meta.u_enr_query_get_relation_parameter_name(v_parameter));
     END LOOP;
 
+
 -- Inserting the many-join record
     WITH cte AS (
-    INSERT INTO elements (type, source_id, expression, alias, attribute_id, parent_ids, relation_ids, many_join_list)
-    VALUES ( 'many-join', in_many_join_source_id, v_join_expression, v_join_alias, null, v_parent_element_ids, in_source_relation_ids, v_many_join_list )
+    INSERT INTO elements (type, source_id, expression, alias, attribute_id, parent_ids, relation_ids, container_source_id)
+    VALUES ( v_join_type, in_many_join_source_id, v_join_expression, v_join_alias, null, v_parent_element_ids, in_source_relation_ids, in_container_source_id )
     RETURNING id )
     SELECT id INTO v_ret_element_id
     FROM cte;

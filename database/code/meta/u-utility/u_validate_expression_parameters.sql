@@ -126,7 +126,7 @@ $BODY$;
 
 -- validate that parameters and aggregates used in the expression match those in _params and _aggs tables
 -- returns null when passed, otherwise returns error
-CREATE OR REPLACE FUNCTION meta.u_validate_expression_parameters(in_expression_parsed text)
+CREATE OR REPLACE FUNCTION meta.u_validate_expression_parameters(in_expression_parsed text, in_source_id int)
     RETURNS text
     LANGUAGE 'plpgsql'
 AS $BODY$
@@ -136,6 +136,16 @@ DECLARE
   v_param_ids_check  int[];
   v_error text;
 BEGIN
+
+IF EXISTS(SELECT 1 FROM meta.source WHERE source_id = in_source_id AND processing_type = 'stream') THEN
+    SELECT array_agg(p.id)::text INTO v_error
+    FROM _params p 
+    WHERE aggregation_id IS NOT NULL;
+    IF v_error IS NOT NULL THEN
+      RETURN format('Aggregates are not supported in stream source rules. Parameters: %s Expression: %s',v_error, in_expression_parsed);
+    END IF;
+END IF;
+
 
 --Check that all aggregates use relation_ids
 SELECT array_agg(a.id)::text INTO v_error

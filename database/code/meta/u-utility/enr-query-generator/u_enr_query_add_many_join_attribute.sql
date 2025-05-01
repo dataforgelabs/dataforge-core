@@ -1,7 +1,7 @@
-CREATE OR REPLACE FUNCTION meta.u_enr_query_add_many_join_attribute(in_agg meta.enrichment_aggregation)
+CREATE OR REPLACE FUNCTION meta.u_enr_query_add_many_join_attribute(in_agg meta.enrichment_aggregation, in_relation_ids int[], in_container_source_id int)
  RETURNS int -- returns meta.query_element.id
  LANGUAGE plpgsql
- COST 10
+ 
 AS $function$
 DECLARE
 v_element_id int;
@@ -10,8 +10,6 @@ v_attribute_name text;
 v_attribute_alias text;
 v_expression text := in_agg.expression;
 v_parameter meta.enrichment_parameter;
-v_source_id int; -- [This] source_id of the parent enrichment
-v_many_join_source_ids int[];
 v_ret_element_id int;
 v_alias text := 'A_' || in_agg.enrichment_id || '_' || in_agg.enrichment_aggregation_id;
 
@@ -20,7 +18,7 @@ BEGIN
 SELECT e.id INTO v_element_id
 FROM elements e
 WHERE e.type = 'many-join attribute' 
-AND e.attribute_id = in_agg.enrichment_aggregation_id AND e.alias = v_alias;
+AND e.attribute_id = in_agg.enrichment_aggregation_id AND e.alias = v_alias AND e.container_source_id = in_container_source_id ;
 
 IF v_element_id IS NOT NULL THEN
     -- attribute already has been added - return element id
@@ -28,16 +26,12 @@ IF v_element_id IS NOT NULL THEN
 END IF;
 
 RAISE DEBUG 'Adding many-join attribute for enrichment_aggregation %', to_json(in_agg);
-PERFORM meta.u_assert(in_agg.relation_ids IS NOT NULL, 'relation_ids is NULL for enrichment_aggregation ' || to_json(in_agg));
-
-SELECT e.source_id INTO v_source_id FROM meta.enrichment e
-WHERE e.enrichment_id = in_agg.enrichment_id;
-
-v_many_join_source_ids := meta.u_enr_query_get_related_source_ids(v_source_id,in_agg.relation_ids);
+PERFORM meta.u_assert(in_agg.relation_ids IS NOT NULL, format('relation_ids is NULL for enrichment_aggregation %s container_source_id=%s',to_json(in_agg),in_container_source_id));
+PERFORM meta.u_assert(in_relation_ids IS NOT NULL, format('in_relation_ids is NULL for enrichment_aggregation %s container_source_id=%s', to_json(in_agg), in_container_source_id));
 
 v_parent_element_ids := v_parent_element_ids || 
-    meta.u_enr_query_add_many_join(v_many_join_source_ids[array_upper(v_many_join_source_ids,1)],
-    in_agg.relation_ids);
+    meta.u_enr_query_add_many_join(meta.u_enr_query_get_relation_chain_target_source_id(in_container_source_id,in_relation_ids),
+    in_relation_ids, in_container_source_id);
 
 -- process parameters of aggregation
 FOR v_parameter IN 
@@ -48,7 +42,7 @@ FOR v_parameter IN
     -- Get parameter name
         v_attribute_name := meta.u_enr_query_get_enrichment_parameter_name(v_parameter);
         -- attribute can come from :
-        IF v_parameter.source_id = v_source_id AND v_parameter.self_relation_container IS NULL  THEN
+        IF v_parameter.source_id = in_container_source_id AND v_parameter.self_relation_container IS NULL  THEN
             v_parent_element_ids := v_parent_element_ids || meta.u_enr_query_add_this_source_element(v_parameter);
 
 
@@ -58,7 +52,7 @@ FOR v_parameter IN
             v_attribute_alias := 'R';
         ELSE
             -- This parameter is not from [This] or many-join source: add transit attribute
-            v_parent_element_ids := v_parent_element_ids || meta.u_enr_query_add_transit(v_parameter);
+            v_parent_element_ids := v_parent_element_ids || meta.u_enr_query_add_transit(v_parameter, in_container_source_id);
             v_attribute_alias := 'T'; 
             v_attribute_name := 'TP_' || v_parameter.parent_enrichment_id || '_' || v_parameter.enrichment_parameter_id;
         END IF;
@@ -69,9 +63,9 @@ FOR v_parameter IN
 
 -- Inserting the  record
     WITH cte AS (
-    INSERT INTO elements ( type, expression, alias, attribute_id, parent_ids, relation_ids)
+    INSERT INTO elements ( type, expression, alias, attribute_id, parent_ids, relation_ids, container_source_id)
     VALUES ('many-join attribute', v_expression, v_alias, 
-            in_agg.enrichment_aggregation_id, v_parent_element_ids, in_agg.relation_ids )
+            in_agg.enrichment_aggregation_id, v_parent_element_ids, in_agg.relation_ids, in_container_source_id)
     RETURNING id )
     SELECT id INTO v_ret_element_id
     FROM cte;

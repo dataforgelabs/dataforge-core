@@ -23,7 +23,7 @@ BEGIN
         VALUES ( v_log_id, in_err || ' Click Restart to proceed with import','svc_import_complete', 'W', clock_timestamp() + interval '1 second'); -- makes it appear last
     ELSE 
        INSERT INTO log.actor_log (log_id, message, actor_path, severity, insert_datetime)
-        VALUES ( v_log_id, 'Import loaded. ' || COALESCE(in_err, ''),'svc_import_complete', 'I', clock_timestamp());
+        VALUES ( v_log_id, 'Import complete. ' || COALESCE(in_err, ''),'svc_import_complete', 'I', clock_timestamp());
     END IF;        
 END;
 $function$;

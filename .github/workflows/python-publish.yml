@@ -19,7 +19,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4  
     - name: Edit version
       run: sed -i 's/version = \".*\"/version = \"${{ github.event.release.tag_name }}\"/g' pyproject.toml
     - name: Make the script files executable
@@ -96,5 +96,6 @@ jobs:
         path: dist/
     - name: publish dist to ProdPyPI
       uses: pypa/gh-action-pypi-publish@release/v1
-        
+    
+      
 
