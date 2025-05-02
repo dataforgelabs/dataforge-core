@@ -4,6 +4,7 @@
 [DataForge](https://www.dataforgelabs.com) helps data analysts and engineers build and extend data solutions by leveraging modern software engineering principles.
 
 [![OSSRank](https://shields.io/endpoint?url=https://ossrank.com/shield/4025)](https://ossrank.com/p/4025)
+[![Upload Python Package](https://github.com/dataforgelabs/dataforge-core/actions/workflows/python-publish.yml/badge.svg)](https://github.com/dataforgelabs/dataforge-core/actions/workflows/python-publish.yml)
 
 ## Understanding DataForge
 
