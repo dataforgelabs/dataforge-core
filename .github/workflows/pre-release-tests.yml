@@ -2,10 +2,6 @@ name: Run Cypress Test
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows: ["Upload Python Package"]
-    types:
-      - completed
   # push:
   #   branches:
   #     - next
@@ -17,7 +13,6 @@ jobs:
   run-cypress-tests:
     name: Run Cypress Tests
     runs-on: ubuntu-latest
-    #if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4    
