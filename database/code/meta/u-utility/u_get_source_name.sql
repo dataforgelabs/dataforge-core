@@ -17,7 +17,7 @@ BEGIN
 		RETURN format('Unknown source_id=%s', in_source_id);
 	END IF;
 
-	IF NOT templatize_flag THEN
+	IF NOT templatize_flag OR v_source_template_id IS NULL THEN
 		RETURN v_source_name;
 	END IF;
 
