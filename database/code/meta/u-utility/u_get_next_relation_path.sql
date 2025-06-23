@@ -20,6 +20,7 @@ DECLARE
 	v_ret_relation_ids int[] := '{}';
 	v_reverse_flag boolean;
 	v_max_length int;
+	v_alt_cardinality_paths_exist boolean = false;
 BEGIN
 
 in_start_path := COALESCE(in_start_path,'{}'::int[]);
@@ -84,6 +85,7 @@ IF v_max_level IS NULL THEN
 		RETURN json_build_object('error',format('Remove aggregation or add OVER clause. Target source `%s`', meta.u_get_source_name(in_to_source_id) ));
 	END IF;
 ELSE
+	v_alt_cardinality_paths_exist = EXISTS(SELECT 1 FROM _paths WHERE cardinality != in_cardinality);
 	DELETE FROM _paths WHERE cardinality != in_cardinality;
 END IF;
 
@@ -120,7 +122,8 @@ FOR v_level IN 1 .. v_max_level LOOP
 		ELSE	
 			v_next_relation_id := null;
 		END IF;
-		RETURN json_build_object('path',v_ret_path,'complete', true, 'relation_ids',v_ret_relation_ids, 'next', v_next_relation_id);
+		RETURN json_build_object('path',v_ret_path,'complete', true, 'relation_ids',v_ret_relation_ids, 'next', v_next_relation_id,
+			'alt_cardinality_path_exist',v_alt_cardinality_paths_exist);
 	END IF;
 END LOOP;
 
