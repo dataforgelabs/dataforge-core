@@ -11,6 +11,7 @@ name: Upload Python Package
 on:
   release:
     types: [published]
+  workflow_dispatch: 
 
 permissions:
   contents: read
@@ -110,7 +111,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: 'corretto'
-        java-version: '11'
+        java-version: '17'
 
     - name: Set up Python
       uses: actions/setup-python@v5
