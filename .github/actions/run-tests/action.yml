@@ -1,0 +1,112 @@
+name: Run Dataforge Tests
+description: Shared test steps for Dataforge
+inputs:
+  install-command:
+    description: Command to install dataforge
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'corretto'
+        java-version: '17'
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      run: npm install
+      shell: bash
+
+    - name: Set environment variables for Cypress
+      run: |
+        echo "POSTGRES_CONNECTION_STRING=${{ env.POSTGRES_CONNECTION_STRING }}" >> $GITHUB_ENV
+        echo "DATABRICKS_HOSTNAME=${{ env.DATABRICKS_HOSTNAME }}" >> $GITHUB_ENV
+        echo "DATABRICKS_HTTP_PATH=${{ env.DATABRICKS_HTTP_PATH }}" >> $GITHUB_ENV
+        echo "DATABRICKS_ACCESS_TOKEN=${{ env.DATABRICKS_ACCESS_TOKEN }}" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Run Java version check
+      run: java -version
+      shell: bash
+
+    - name: Run Python version check
+      run: python --version
+      shell: bash
+
+    - name: Install Dataforge
+      run: ${{ inputs.install-command }}
+      shell: bash
+
+    - name: Run Dataforge version check
+      run: dataforge --version
+      shell: bash
+
+    - name: Run interactive Dataforge configuration
+      env:
+        POSTGRES_CONNECTION_STRING: ${{ env.POSTGRES_CONNECTION_STRING }}
+        DATABRICKS_HOSTNAME: ${{ env.DATABRICKS_HOSTNAME }}
+        DATABRICKS_HTTP_PATH: ${{ env.DATABRICKS_HTTP_PATH }}
+        DATABRICKS_ACCESS_TOKEN: ${{ env.DATABRICKS_ACCESS_TOKEN }}
+      run: |
+        config_output=$(node scripts/runInteractiveCommand.js --configure)
+        echo "Dataforge configuration output: $config_output"
+        if echo "$config_output" | grep -q "Databricks connection validated successfully"; then
+          echo "Databricks configuration completed successfully."
+        else
+          echo "Databricks configuration validation failed."
+          exit 1
+        fi
+      shell: bash
+
+    - name: Initialize Dataforge
+      run: |
+        init_output=$(dataforge --init)
+        echo "Dataforge initialization output: $init_output"
+        if echo "$init_output" | grep -q "Initialized project"; then
+          echo "Dataforge initialized successfully."
+        else
+          echo "Dataforge initialization failed."
+          exit 1
+        fi
+      shell: bash
+
+    - name: Run interactive Dataforge seeding
+      run: node scripts/runInteractiveCommand.js --seed
+      shell: bash
+
+    - name: Run Dataforge build
+      run: |
+        build_output=$(dataforge --build)
+        echo "Dataforge build output: $build_output"
+        if echo "$build_output" | grep -q "Import completed successfully"; then
+          echo "build completed successfully."
+        else
+          echo "Dataforge build failed."
+          exit 1
+        fi
+      shell: bash
+
+    - name: Run Dataforge process
+      run: |
+        process_output=$(dataforge --run)
+        echo "Dataforge process output: $process_output"
+        if echo "$process_output" | grep -q "Execution completed successfully"; then
+          echo "run completed successfully."
+        else
+          echo "Dataforge process failed."
+          exit 1
+        fi
+      shell: bash
