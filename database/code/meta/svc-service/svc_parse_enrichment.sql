@@ -46,6 +46,7 @@ DECLARE
     v_relation_path_count       int;
     v_processing_type           text;
     v_loop_check                text;
+    v_upstream_keep_current_flag boolean;
 
 BEGIN
 
@@ -488,7 +489,11 @@ RAISE DEBUG 'Parsed % aggregates',(SELECT COUNT(1) FROM  _aggs_parsed);
                 (SELECT source_id FROM meta.source s WHERE s.sub_source_enrichment_id = in_enr.enrichment_id)); 
     END IF;
 
-RETURN json_strip_nulls(json_build_object('expression', v_ret_expression, 'enrichment', v_ret_enr, 'params', v_ret_params, 'aggs', v_ret_aggs));
+v_upstream_keep_current_flag := EXISTS(SELECT 1 FROM _params p 
+                                JOIN meta.enrichment e ON e.enrichment_id = p.enrichment_id
+                                WHERE p.source_name = 'This' AND p.type = 'enrichment' AND e.keep_current_flag);
+
+RETURN json_strip_nulls(json_build_object('expression', v_ret_expression, 'enrichment', v_ret_enr, 'params', v_ret_params, 'aggs', v_ret_aggs, 'upstream_keep_current_flag', v_upstream_keep_current_flag));
 
 END;
 
