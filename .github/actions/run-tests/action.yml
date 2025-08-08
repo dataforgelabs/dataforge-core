@@ -1,32 +1,25 @@
-name: Run Cypress Test
-
-on:
-  workflow_dispatch:
-  # push:
-  #   branches:
-  #     - next
-
-permissions:
-  contents: read
-
-jobs:
-  run-cypress-tests:
-    name: Run Cypress Tests
-    runs-on: ubuntu-latest
-    steps:
+name: Run Dataforge Tests
+description: Shared test steps for Dataforge
+inputs:
+  install-command:
+    description: Command to install dataforge
+    required: true
+runs:
+  using: "composite"
+  steps:
     - name: Checkout repository
-      uses: actions/checkout@v4    
+      uses: actions/checkout@v4
 
     - name: Set up Java
       uses: actions/setup-java@v4
       with:
         distribution: 'corretto'
-        java-version: '11'
+        java-version: '17'
 
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.12'    
+        python-version: '3.12'
 
     - name: Install Node.js
       uses: actions/setup-node@v4
@@ -35,39 +28,38 @@ jobs:
 
     - name: Install dependencies
       run: npm install
+      shell: bash
 
     - name: Set environment variables for Cypress
       run: |
-        echo "POSTGRES_CONNECTION_STRING=${{ secrets.POSTGRES_CONNECTION_STRING }}" >> $GITHUB_ENV
-        echo "DATABRICKS_HOSTNAME=${{ secrets.DATABRICKS_HOSTNAME }}" >> $GITHUB_ENV
-        echo "DATABRICKS_HTTP_PATH=${{ secrets.DATABRICKS_HTTP_PATH }}" >> $GITHUB_ENV
-        echo "DATABRICKS_ACCESS_TOKEN=${{ secrets.DATABRICKS_ACCESS_TOKEN }}" >> $GITHUB_ENV
-    
+        echo "POSTGRES_CONNECTION_STRING=${{ env.POSTGRES_CONNECTION_STRING }}" >> $GITHUB_ENV
+        echo "DATABRICKS_HOSTNAME=${{ env.DATABRICKS_HOSTNAME }}" >> $GITHUB_ENV
+        echo "DATABRICKS_HTTP_PATH=${{ env.DATABRICKS_HTTP_PATH }}" >> $GITHUB_ENV
+        echo "DATABRICKS_ACCESS_TOKEN=${{ env.DATABRICKS_ACCESS_TOKEN }}" >> $GITHUB_ENV
+      shell: bash
+
     - name: Run Java version check
       run: java -version
+      shell: bash
 
     - name: Run Python version check
       run: python --version
-    
-    - name: Get the latest pre-release tag and install Dataforge
-      run: |
-        prerelease_tag=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases | jq -r 'map(select(.prerelease == true)) | .[0].tag_name')
-        if [ "$prerelease_tag" != "null" ]; then
-          echo "The latest pre-release tag is: $prerelease_tag"
-          pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ dataforge-core=="$prerelease_tag"
-        else
-          echo "No pre-release found."
-        fi
+      shell: bash
+
+    - name: Install Dataforge
+      run: ${{ inputs.install-command }}
+      shell: bash
 
     - name: Run Dataforge version check
       run: dataforge --version
+      shell: bash
 
     - name: Run interactive Dataforge configuration
       env:
-        POSTGRES_CONNECTION_STRING: ${{ secrets.POSTGRES_CONNECTION_STRING }}
-        DATABRICKS_HOSTNAME: ${{ secrets.DATABRICKS_HOSTNAME }}
-        DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
-        DATABRICKS_ACCESS_TOKEN: ${{ secrets.DATABRICKS_ACCESS_TOKEN }}
+        POSTGRES_CONNECTION_STRING: ${{ env.POSTGRES_CONNECTION_STRING }}
+        DATABRICKS_HOSTNAME: ${{ env.DATABRICKS_HOSTNAME }}
+        DATABRICKS_HTTP_PATH: ${{ env.DATABRICKS_HTTP_PATH }}
+        DATABRICKS_ACCESS_TOKEN: ${{ env.DATABRICKS_ACCESS_TOKEN }}
       run: |
         config_output=$(node scripts/runInteractiveCommand.js --configure)
         echo "Dataforge configuration output: $config_output"
@@ -77,6 +69,7 @@ jobs:
           echo "Databricks configuration validation failed."
           exit 1
         fi
+      shell: bash
 
     - name: Initialize Dataforge
       run: |
@@ -88,9 +81,11 @@ jobs:
           echo "Dataforge initialization failed."
           exit 1
         fi
+      shell: bash
 
     - name: Run interactive Dataforge seeding
       run: node scripts/runInteractiveCommand.js --seed
+      shell: bash
 
     - name: Run Dataforge build
       run: |
@@ -102,6 +97,7 @@ jobs:
           echo "Dataforge build failed."
           exit 1
         fi
+      shell: bash
 
     - name: Run Dataforge process
       run: |
@@ -113,3 +109,4 @@ jobs:
           echo "Dataforge process failed."
           exit 1
         fi
+      shell: bash
