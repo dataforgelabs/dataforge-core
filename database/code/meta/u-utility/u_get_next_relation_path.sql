@@ -30,9 +30,7 @@ v_in_path_length := cardinality(in_start_path);
 IF to_regclass('meta.system_configuration') IS NULL THEN
 	v_max_length := greatest(4, v_in_path_length + 2);
 ELSE
-	SELECT greatest(sc.value::int, v_in_path_length + 2) INTO v_max_length
-	FROM meta.system_configuration sc
-	WHERE sc.name = 'max-relation-hops';
+	v_max_length := greatest(meta.u_sys_config('max-relation-hops')::int, v_in_path_length + 2);
 END IF;
 
 SELECT array_agg(r.id) INTO v_missing_relation_ids

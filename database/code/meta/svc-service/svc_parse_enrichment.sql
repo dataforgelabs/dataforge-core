@@ -47,6 +47,7 @@ DECLARE
     v_processing_type           text;
     v_loop_check                text;
     v_upstream_keep_current_flag boolean;
+    v_platform text = meta.u_sys_config('lakehouse-platform');
 
 BEGIN
 
@@ -63,11 +64,14 @@ THEN
     RETURN json_build_object('error', 'Please use the description section for any comments.', 'expression', NULL);
 END IF;
 
+
 -- check attribute name syntax
-IF NOT in_enr.attribute_name ~ '^[a-z_]+[a-z0-9_]*$'
-THEN
-    v_attribute_name_error := 'Invalid attribute name syntax. Attribute name has to start with lowercase letter or _ It may contain lowercase letters, numbers and _';
-END IF;
+v_attribute_name_error := CASE 
+    WHEN v_platform = 'snowflake' AND NOT in_enr.attribute_name ~ '^[A-Z_]+[A-Z0-9_]*$' THEN 
+        'Invalid attribute name syntax. Attribute name has to start with uppercase letter or _ It may contain uppercase letters, numbers and _'
+    WHEN v_platform = 'databricks' AND NOT in_enr.attribute_name ~ '^[a-z_]+[a-z0-9_]*$' THEN 
+        'Invalid attribute name syntax. Attribute name has to start with lowercase letter or _ It may contain lowercase letters, numbers and _'
+    END;
 
 v_template_match_flag := in_template_check_flag and exists (select 1 from meta.enrichment WHERE source_id = in_enr.source_id AND expression = in_enr.expression AND attribute_name = in_enr.attribute_name AND name = in_enr.name);
 
