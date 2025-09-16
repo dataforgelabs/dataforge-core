@@ -58,8 +58,12 @@ BEGIN
     v_ret_expression := v_ret_expression || substr(in_expression,v_last_end);
 
     IF NULLIF(in_cast_datatype,'') IS NOT NULL THEN
+        IF in_cast_datatype = 'DECIMAL' THEN
+            in_cast_datatype = 'NUMERIC(38,12)';
+        END IF;
         v_ret_expression := format('CAST(%s as %s)',v_ret_expression,in_cast_datatype);
     END IF;
+
 
     RAISE DEBUG 'v_exp_test_select_list: %',v_exp_test_select_list;
     
