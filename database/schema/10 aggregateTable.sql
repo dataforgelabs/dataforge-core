@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS meta.aggregate (
     numeric_flag   BOOLEAN,
     data_type      TEXT
 );
-
+--TODO: update agg list  for snowflake
 TRUNCATE TABLE meta.aggregate;
 INSERT INTO meta.aggregate(aggregate_name, description, numeric_flag, data_type)
 VALUES ('any', 'Returns true if at least one value of `expr` is true.', FALSE, 'boolean'),
@@ -53,3 +53,7 @@ VALUES ('any', 'Returns true if at least one value of `expr` is true.', FALSE, '
     ('var_samp', 'Returns the sample variance calculated from values of a group.', TRUE, 'double'),
     ('variance', 'Returns the sample variance calculated from values of a group', TRUE, 'double')
 ;
+
+UPDATE meta.aggregate
+SET data_type = CASE data_type WHEN 'long' THEN 'INTEGER' WHEN 'double' THEN 'FLOAT' WHEN 'string' THEN 'VARCHAR' ELSE upper(data_type) END
+WHERE meta.u_sys_config('lakehouse-platform') = 'snowflake';
