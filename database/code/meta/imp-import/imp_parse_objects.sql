@@ -13,7 +13,7 @@ BEGIN
         SELECT import_object_id, body_text::jsonb body
         FROM meta.import_object WHERE import_id = in_import_id)
     UPDATE meta.import_object io
-    SET body = p.body, 
+    SET body = CASE WHEN object_type IN ('source') THEN meta.imp_map_connection_type(p.body) ELSE p.body END, 
         name =  CASE WHEN object_type IN ('source' ,'output', 'group', 'token') THEN p.body->>(object_type || '_name')
                 WHEN object_type IN ('output_template','source_template') THEN p.body->>'object_name'
         ELSE p.body->>'name' END
