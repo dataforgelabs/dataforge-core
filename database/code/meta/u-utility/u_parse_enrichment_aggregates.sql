@@ -59,7 +59,7 @@ CREATE TEMP TABLE _aggs_parsed
             THEN
                 -- Check for window function
                 v_follow_text := substring(v_expression, v_expression_position + 1, length(v_expression));
-                v_window_function_flag := v_follow_text ~* '^\s*over\s*\(';
+                v_window_function_flag := v_follow_text ~* '(^|\s*within group\s*\([^\)]+\))\s*over\s*\(';
 
                 RAISE DEBUG 'Out of parenthesis. position=% v_window_function_flag=% v_follow_text=%',v_expression_position,v_window_function_flag, v_follow_text;
                 v_inner_text := substring(v_expression, v_aggregate_start_position, v_expression_position - v_aggregate_start_position);

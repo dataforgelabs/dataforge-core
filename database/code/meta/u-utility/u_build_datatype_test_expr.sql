@@ -49,7 +49,11 @@ BEGIN
         END IF;
 
         v_ret_expression := v_ret_expression || CASE WHEN v_aggregates_exist_flag AND v_aggregate_id IS NULL 
-            THEN  'first_value(' || v_attribute_name || ')' -- wrap non-aggregated parameter into aggregate for data type testing purposes only
+            THEN  -- wrap non-aggregated parameter into aggregate for data type testing purposes only
+                CASE meta.u_sys_config('lakehouse-platform') 
+                    WHEN 'databricks' THEN  'first_value(' || v_attribute_name || ')' 
+                    WHEN 'snowflake' THEN  'ARRAY_AGG(' || v_attribute_name || ')[0]' 
+                END
             ELSE v_attribute_name END;
 
         v_last_end = v_end + 1;
