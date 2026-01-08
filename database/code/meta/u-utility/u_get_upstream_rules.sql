@@ -13,7 +13,7 @@ BEGIN
   -- Include rules used by relations
   --Return rule chain if enrichment contains downstream self-reference
 
-    IF in_level = 0 AND EXISTS(SELECT 1 FROM information_schema.columns where table_name = '_params' AND column_name = 'type')
+    IF in_level = 1 AND EXISTS(SELECT 1 FROM information_schema.columns where table_name = '_params' AND column_name = 'type')
         THEN
         
         RETURN QUERY (

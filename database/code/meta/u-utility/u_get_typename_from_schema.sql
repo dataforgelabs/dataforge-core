@@ -20,6 +20,8 @@ IF v_type IN ('integer', 'byte','short') THEN
     v_type := 'int';
 ELSEIF v_type LIKE 'decimal%' THEN 
     v_type := 'decimal';
+ELSEIF v_type LIKE 'DECIMAL%' THEN 
+    v_type := 'DECIMAL';
 END IF;
 
 RETURN v_type;

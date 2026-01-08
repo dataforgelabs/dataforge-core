@@ -5,7 +5,6 @@ CREATE TABLE IF NOT EXISTS meta.aggregate (
     numeric_flag   BOOLEAN,
     data_type      TEXT
 );
-
 TRUNCATE TABLE meta.aggregate;
 INSERT INTO meta.aggregate(aggregate_name, description, numeric_flag, data_type)
 VALUES ('any', 'Returns true if at least one value of `expr` is true.', FALSE, 'boolean'),

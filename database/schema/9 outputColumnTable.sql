@@ -15,8 +15,6 @@ CREATE TABLE IF NOT EXISTS meta.output_column
     updated_userid text COLLATE pg_catalog."default",
     update_datetime timestamp without time zone,
     description text COLLATE pg_catalog."default",
-    partition_ordinal integer,
-    zorder_ordinal integer,
     CONSTRAINT pk_output_column PRIMARY KEY (output_column_id),
     CONSTRAINT fk_output_column_output_id FOREIGN KEY (output_id)
         REFERENCES meta.output (output_id) MATCH SIMPLE

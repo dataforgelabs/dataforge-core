@@ -17,21 +17,21 @@ BEGIN
   --Recursively get all downstream rules. 
   -- Include rules used by relations
   --Return rule chain if enrichment contains downstream self-reference
+  -- Stop check on first duplicate rule in chain
 
 
   WITH RECURSIVE ds AS (
-    SELECT enrichment_id, path, 0 level
-    FROM meta.u_get_upstream_rules(in_enrichment_id) ur
+    SELECT in_enrichment_id enrichment_id, ARRAY[v_start_node_id] path, 0 level, false loop_flag
     UNION ALL 
-    SELECT der.enrichment_id, ds.path || der.path, ds.level + 1
+    SELECT der.enrichment_id, ds.path || der.path, ds.level + 1, der.path && ds.path
     FROM ds
     CROSS JOIN LATERAL meta.u_get_upstream_rules(ds.enrichment_id, ds.level + 1) der
-    WHERE NOT v_start_node_id = ANY(ds.path)
+    WHERE NOT ds.loop_flag AND ds.level < 10
   ) 
-  SELECT ARRAY['EN' || in_enrichment_id] || ds.path 
+  SELECT ds.path 
   INTO v_circular_path
   FROM ds
-  WHERE enrichment_id = in_enrichment_id;
+  WHERE loop_flag;
 
 
 

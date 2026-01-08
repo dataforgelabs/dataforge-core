@@ -9,11 +9,14 @@ DECLARE
 
      v_type text;
 
+
 BEGIN
 
 IF in_schema IS NOT NULL THEN
     IF jsonb_typeof(in_schema) = 'string' AND in_schema->>0 like 'decimal%' THEN
         RETURN to_jsonb('decimal(38,12)'::text);        
+    ELSEIF jsonb_typeof(in_schema) = 'string' AND in_schema->>0 like 'DECIMAL%' THEN
+        RETURN to_jsonb('DECIMAL(38,12)'::text);        
     ELSE
         RETURN in_schema;
     END IF;
@@ -24,6 +27,8 @@ IF in_datatype = 'int' THEN
     RETURN to_jsonb('integer'::text);
 ELSEIF in_datatype LIKE 'decimal%' THEN 
     RETURN to_jsonb('decimal(38,12)'::text);
+ELSEIF in_datatype LIKE 'DECIMAL%' THEN 
+    RETURN to_jsonb('DECIMAL(38,12)'::text);
 ELSEIF in_datatype IN ('struct','array') THEN 
     RETURN null;
 END IF;

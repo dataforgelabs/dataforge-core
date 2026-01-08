@@ -65,7 +65,8 @@ ELSEIF in_datatype = 'array' THEN
 ELSEIF in_datatype like 'decimal(%' THEN 
     v_exp :=  format('CAST(`decimal` AS decimal(38,12))',in_datatype);
 ELSE
-   v_exp :=  '`' || in_datatype || '`';
+   v_exp := CASE meta.u_sys_config('lakehouse-platform') WHEN 'databricks' THEN '`' || in_datatype || '`'
+   WHEN 'snowflake' THEN '"' || in_datatype || '"' END;
 END IF;   
 
 RETURN v_exp;
