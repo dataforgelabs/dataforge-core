@@ -35,7 +35,7 @@ BEGIN
     INTO v_ret.name, v_ret.system_attribute_id, v_ret.datatype, v_ret.unique_flag
     FROM meta.system_attribute s
     JOIN meta.source src  ON src.source_id = in_source_id AND 
-    s.refresh_type @> ARRAY[src.refresh_type] AND s.table_type @> ARRAY['hub']
+    s.refresh_type @> ARRAY[src.refresh_type] AND s.table_type @> ARRAY['ingot']
     WHERE s.name = v_attribute_name_substituted;
 
     IF v_ret.system_attribute_id IS NOT NULL THEN
