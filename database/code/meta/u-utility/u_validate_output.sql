@@ -40,7 +40,8 @@ IF in_output.output_sub_type = 'text' AND (SELECT count(1) FROM meta.output_colu
      RETURN 'Text outputs can only have a single output column! Please remove excess columns or choose another output file type.';
 END IF;
 
-IF (in_output.output_type = 'file' AND (in_output.output_sub_type = 'parquet' OR in_output.output_sub_type = 'avro')) OR (in_output.output_type = 'table' AND in_output.output_sub_type = 'delta_lake') OR in_output.output_type = 'table'
+IF (in_output.output_type = 'file' AND (in_output.output_sub_type = 'parquet' OR in_output.output_sub_type = 'avro')) 
+    OR (in_output.output_type = 'table' AND in_output.output_sub_type = 'bigquery')
     THEN
         SELECT string_agg(oc.name,',') INTO v_bad_columns
         FROM meta.output_column oc WHERE in_output.output_id = oc.output_id AND oc.name !~ ('^[a-zA-Z_]+[a-zA-Z0-9_]*$');
