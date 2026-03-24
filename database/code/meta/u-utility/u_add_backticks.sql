@@ -1,18 +1,10 @@
 CREATE OR REPLACE  FUNCTION meta.u_add_backticks(in_column text)
     RETURNS TEXT
-    LANGUAGE plpgsql
+    LANGUAGE sql
 AS
 $function$
-DECLARE
-    v_updated_name text;
-
-BEGIN
-
-    IF in_column !~ ('^[a-zA-Z_]+[a-zA-Z0-9_]*$') THEN
-        RETURN '`' || in_column || '`';
-    ELSE
-        RETURN in_column;
-    END IF;
-
+SELECT CASE
+    WHEN in_column !~ '^[a-zA-Z_]+[a-zA-Z0-9_]*$' THEN '`' || in_column || '`'
+    ELSE in_column
 END;
 $function$;
