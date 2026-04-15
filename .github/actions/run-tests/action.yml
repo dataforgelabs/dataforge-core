@@ -78,15 +78,22 @@ runs:
 
         output = ""
         full_output = ""
-        for line in proc.stdout:
-            sys.stdout.write(line)
-            output += line
-            full_output += line
-            while responses and responses[0][0] in output:
-                proc.stdin.write(responses[0][1] + "\n")
-                proc.stdin.flush()
-                output = ""
-                responses.pop(0)
+        while True:
+          char = proc.stdout.read(1)
+          if not char:
+              break
+
+          sys.stdout.write(char)
+          sys.stdout.flush()
+
+          output += char
+          full_output += char
+
+          while responses and responses[0][0] in output:
+            proc.stdin.write(responses[0][1] + "\n")
+            proc.stdin.flush()
+            output = ""
+            responses.pop(0)
 
         rc = proc.wait()
         if rc != 0 or "Databricks connection validated successfully" not in full_output:
@@ -122,13 +129,20 @@ runs:
         )
 
         output = ""
-        for line in proc.stdout:
-            sys.stdout.write(line)
-            output += line
-            if "All objects in schema(s) log,meta in postgres database will be deleted. Do you want to continue (y/n)?" in output:
-                proc.stdin.write("y\n")
-                proc.stdin.flush()
-                output = ""
+        while True:
+          char = proc.stdout.read(1)
+          if not char:
+              break
+
+          sys.stdout.write(char)
+          sys.stdout.flush()
+
+          output += char          
+
+          if "All objects in schema(s) log,meta in postgres database will be deleted. Do you want to continue (y/n)?" in output:
+              proc.stdin.write("y\n")
+              proc.stdin.flush()
+              output = ""
 
         rc = proc.wait()
         if rc != 0:
