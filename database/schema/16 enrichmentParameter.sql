@@ -22,3 +22,5 @@
 
 
 
+CREATE INDEX IF NOT EXISTS ix_enrichment_parameter_parent_enrichment_id
+ON meta.enrichment_parameter (parent_enrichment_id);

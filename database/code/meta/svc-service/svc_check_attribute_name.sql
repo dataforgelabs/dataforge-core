@@ -17,7 +17,7 @@ BEGIN
         UNION ALL
         SELECT 'system', system_attribute_id
         FROM meta.system_attribute s
-        WHERE s.table_type @> ARRAY['hub'] AND s.name = in_name
+        WHERE s.table_type @> ARRAY['ingot'] AND s.name = in_name
         UNION ALL
         SELECT 'enrichment', enrichment_id
         FROM meta.enrichment e 

@@ -21,15 +21,6 @@ runs:
       with:
         python-version: '3.12'
 
-    - name: Install Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-
-    - name: Install dependencies
-      run: npm install
-      shell: bash
-
     - name: Set environment variables for Cypress
       run: |
         echo "POSTGRES_CONNECTION_STRING=${{ env.POSTGRES_CONNECTION_STRING }}" >> $GITHUB_ENV
@@ -61,14 +52,46 @@ runs:
         DATABRICKS_HTTP_PATH: ${{ env.DATABRICKS_HTTP_PATH }}
         DATABRICKS_ACCESS_TOKEN: ${{ env.DATABRICKS_ACCESS_TOKEN }}
       run: |
-        config_output=$(node scripts/runInteractiveCommand.js --configure)
-        echo "Dataforge configuration output: $config_output"
-        if echo "$config_output" | grep -q "Databricks connection validated successfully"; then
-          echo "Databricks configuration completed successfully."
-        else
-          echo "Databricks configuration validation failed."
-          exit 1
-        fi
+        python - <<'PY'
+        import os
+        import subprocess
+        import sys
+
+        responses = [
+            ("Enter Postgres connection string:", os.environ["POSTGRES_CONNECTION_STRING"]),
+            ("Do you want to configure Databricks SQL Warehouse connection (y/n)?", "y"),
+            ("Enter Server hostname:", os.environ["DATABRICKS_HOSTNAME"]),
+            ("Enter HTTP path:", os.environ["DATABRICKS_HTTP_PATH"]),
+            ("Enter access token:", os.environ["DATABRICKS_ACCESS_TOKEN"]),
+            ("Enter catalog name:", "cypress_open_source"),
+            ("Enter schema name:", "aw"),
+        ]
+
+        proc = subprocess.Popen(
+            ["dataforge", "--configure"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+        )
+
+        output = ""
+        full_output = ""
+        for line in proc.stdout:
+            sys.stdout.write(line)
+            output += line
+            full_output += line
+            while responses and responses[0][0] in output:
+                proc.stdin.write(responses[0][1] + "\n")
+                proc.stdin.flush()
+                output = ""
+                responses.pop(0)
+
+        rc = proc.wait()
+        if rc != 0 or "Databricks connection validated successfully" not in full_output:
+            raise SystemExit(rc or 1)
+        PY
       shell: bash
 
     - name: Initialize Dataforge
@@ -84,7 +107,33 @@ runs:
       shell: bash
 
     - name: Run interactive Dataforge seeding
-      run: node scripts/runInteractiveCommand.js --seed
+      run: |
+        python - <<'PY'
+        import subprocess
+        import sys
+
+        proc = subprocess.Popen(
+            ["dataforge", "--seed"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+        )
+
+        output = ""
+        for line in proc.stdout:
+            sys.stdout.write(line)
+            output += line
+            if "All objects in schema(s) log,meta in postgres database will be deleted. Do you want to continue (y/n)?" in output:
+                proc.stdin.write("y\n")
+                proc.stdin.flush()
+                output = ""
+
+        rc = proc.wait()
+        if rc != 0:
+            raise SystemExit(rc)
+        PY
       shell: bash
 
     - name: Run Dataforge build
