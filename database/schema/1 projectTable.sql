@@ -23,7 +23,8 @@ DECLARE
 BEGIN
 IF NOT EXISTS(SELECT 1 FROM meta.project) THEN -- insert default project record with project_id = 1
     INSERT INTO meta.project (name, description, default_flag,created_userid, schema_name)
-      VALUES('Default', 'Default project automatically created by system', true, 'system', 'default');
+      VALUES('Default', 'Default project automatically created by system', true, 'system', 
+      CASE WHEN meta.u_sys_config('lakehouse-platform') = 'snowflake' THEN 'DEFAULT' ELSE 'default' END);
 END IF;   
 END;
 $$;  
