@@ -23,4 +23,3 @@ CREATE TABLE IF NOT EXISTS meta.raw_attribute(
 CREATE INDEX IF NOT EXISTS ix_raw_attribute_source_id  ON meta.raw_attribute (source_id);
 
 
-
