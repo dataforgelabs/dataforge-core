@@ -22,10 +22,7 @@ CREATE TABLE IF NOT EXISTS meta.output_column
         ON DELETE NO ACTION,
     CONSTRAINT ck_output_column_precision CHECK ("precision" >= 0),
     CONSTRAINT ck_output_column_scale CHECK (scale >= 0),
-    CONSTRAINT ux_output_column_name UNIQUE (output_id, name)
+    CONSTRAINT ux_output_column_name UNIQUE (output_id, name),
+    CONSTRAINT ux_output_column_output_id_position UNIQUE (output_id, position)
+        DEFERRABLE INITIALLY DEFERRED
 );
-
-CREATE INDEX IF NOT EXISTS ux_output_column_output_id_position
-    ON meta.output_column USING btree
-    (output_id, "position")
-    TABLESPACE pg_default;

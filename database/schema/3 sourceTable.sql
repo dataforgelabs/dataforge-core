@@ -34,10 +34,12 @@ CREATE TABLE IF NOT EXISTS meta.source
     processing_type text,
     ipu_rules_weight int,
     sub_source_enrichment_id int,
+    parent_source_id int,
     CONSTRAINT pk_source PRIMARY KEY (source_id),
     CONSTRAINT ux_source_project_source_name UNIQUE (project_id, source_name),
     CONSTRAINT ux_source_project_hub_view_name UNIQUE (project_id, hub_view_name),
     CONSTRAINT fk_source_project FOREIGN KEY (project_id) REFERENCES meta.project (project_id),
-    CONSTRAINT ux_source_sub_source_enrichment_id UNIQUE (sub_source_enrichment_id)
+    CONSTRAINT ux_source_sub_source_enrichment_id UNIQUE (sub_source_enrichment_id),
+    CONSTRAINT fk_source_parent_source FOREIGN KEY (parent_source_id) REFERENCES meta.source (source_id),
+    CONSTRAINT ux_source_parent_source_id UNIQUE (parent_source_id)
 );
-
