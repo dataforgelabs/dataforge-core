@@ -5,8 +5,6 @@ AS
 $function$
 DECLARE
     v_imp meta.import;
-    v_err jsonb;
-    v_test_flag boolean = false;
 BEGIN
     SELECT * INTO v_imp FROM meta.import WHERE import_id = in_import_id;
 
@@ -15,13 +13,11 @@ BEGIN
         RETURN false;
     END IF;
 
-    v_err := meta.impc_execute(v_imp);
-    IF v_err IS NOT NULL THEN
-        PERFORM meta.svc_import_complete(in_import_id, 'F', v_err::text);
-        RETURN false;
-    END IF;
-    v_test_flag := true;
-
-    RETURN true;
+    PERFORM meta.svc_import_complete(
+        in_import_id,
+        'F',
+        'Import format_spec=''core'' is temporarily unsupported. Use the standard import format; asynchronous core-format expression testing is tracked in DEV-5751.'
+    );
+    RETURN false;
     END;
 $function$;

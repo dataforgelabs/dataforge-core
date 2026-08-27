@@ -6,7 +6,8 @@ AS $function$
 BEGIN
 
 RETURN (
-	SELECT jsonb_build_object('label',  '[' || CASE WHEN in_reverse_flag THEN rs.source_name ELSE s.source_name END || E'] \u2192 ' || sr.relation_name || E' \u2192 [' || CASE WHEN in_reverse_flag THEN s.source_name ELSE rs.source_name END || ']',
+	SELECT jsonb_build_object('relation_name', sr.relation_name,
+	'label',  '[' || CASE WHEN in_reverse_flag THEN rs.source_name ELSE s.source_name END || E'] \u2192 ' || sr.relation_name || E' \u2192 [' || CASE WHEN in_reverse_flag THEN s.source_name ELSE rs.source_name END || ']',
 	'expression',
 	CASE WHEN sr.source_id <> sr.related_source_id THEN replace(replace(sr.expression, '[This]', '[' || s.source_name || ']'), '[Related]', '[' || rs.source_name || ']')
 	ELSE replace(sr.expression, '[This]', '[' || s.source_name  || ']') 
@@ -21,4 +22,3 @@ RETURN (
 END;
 
 $function$;
-
