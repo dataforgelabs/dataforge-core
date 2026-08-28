@@ -24,3 +24,7 @@
 
 CREATE INDEX IF NOT EXISTS ix_enrichment_parameter_parent_enrichment_id
 ON meta.enrichment_parameter (parent_enrichment_id);
+
+CREATE INDEX IF NOT EXISTS ix_enrichment_parameter_raw_attribute_id
+ON meta.enrichment_parameter (raw_attribute_id)
+WHERE type = 'raw';
