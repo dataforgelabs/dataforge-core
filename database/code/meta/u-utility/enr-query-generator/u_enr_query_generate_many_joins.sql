@@ -34,7 +34,12 @@ FOR v_el IN
         ' FROM ' || CASE WHEN v_el.type = 'sub-source-many-join' THEN 
             'inline(' || v_el.expression || ') R'
         ELSE
-            meta.u_get_hub_table_name(v_el.source_id) || ' R WHERE ' || v_el.expression 
+            meta.u_get_hub_table_name(v_el.source_id) || ' R WHERE ' || v_el.expression ||
+            CASE WHEN EXISTS(
+                SELECT 1 FROM meta.source managed_source
+                WHERE managed_source.source_id = v_el.source_id
+                  AND COALESCE((managed_source.cdc_refresh_parameters->>'allow_row_edits')::boolean, false)
+            ) THEN ' AND R.s_approved_flag = true AND R.s_managed_delete_flag = false' ELSE '' END
         END
         || ') ' || v_el.alias || ' ON true';
 

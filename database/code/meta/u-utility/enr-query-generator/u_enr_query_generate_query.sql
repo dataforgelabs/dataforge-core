@@ -89,8 +89,53 @@ FOR v_cte IN 0 .. v_cte_max LOOP
    -- Add current CTE joins
     v_sql := v_sql || COALESCE((SELECT  string_agg( E'\nLEFT JOIN ' || CASE WHEN in_source_id = e.source_id AND v_cte > 0 AND cardinality(e.relation_ids) = 1 THEN 'cte' || (v_cte - 1) -- self-join
         ELSE meta.u_get_hub_table_name(e.source_id) END || ' ' || e.alias 
-                       || ' ON ' || e.expression,' ' ORDER BY e.alias) 
-    FROM elements e WHERE e.container_source_id = in_source_id AND e.type = 'join' AND e.cte = v_cte),'');
+                       || ' ON ' || e.expression
+                       || CASE WHEN EXISTS(
+                           SELECT 1 FROM meta.source managed_source
+                           WHERE managed_source.source_id = e.source_id
+                             AND COALESCE((managed_source.cdc_refresh_parameters->>'allow_row_edits')::boolean, false)
+                       ) THEN ' AND ' || e.alias || '.s_approved_flag = true AND ' || e.alias || '.s_managed_delete_flag = false' ELSE '' END,
+                       ' ' ORDER BY e.alias)
+   FROM elements e WHERE e.container_source_id = in_source_id AND e.type = 'join' AND e.cte = v_cte),'');
+
+   -- Managed values participate in the same CTE as their O rule so downstream
+   -- enrichments consume the effective (calculated or overridden) value.
+   v_sql := v_sql || COALESCE((SELECT string_agg(
+       format(E'\nLEFT JOIN %s.MDM._%s_current MDV_%s ON MDV_%s.s_key = %s.s_key AND MDV_%s.attribute_name = %L AND MDV_%s.event_type = ''ATTRIBUTE_SET''',
+           meta.u_sys_config('datalake-db-name'), in_source_id, enr.enrichment_id,
+           enr.enrichment_id, v_table_alias, enr.enrichment_id, enr.attribute_name, enr.enrichment_id),
+       '' ORDER BY enr.enrichment_id)
+   FROM elements e
+   JOIN meta.enrichment enr ON enr.enrichment_id = e.attribute_id
+   WHERE e.container_source_id = in_source_id
+     AND e.type = 'enrichment'
+     AND e.cte = v_cte
+     AND enr.rule_type_code = 'O'
+     AND EXISTS (
+         SELECT 1 FROM meta.source s
+         WHERE s.source_id = in_source_id AND s.managed_data_history_flag
+     )), '');
+
+   IF EXISTS (
+       SELECT 1
+       FROM elements e
+       JOIN meta.enrichment enr ON enr.enrichment_id = e.attribute_id
+       WHERE e.container_source_id = in_source_id
+         AND e.type = 'enrichment'
+         AND e.cte = v_cte
+         AND enr.rule_type_code = 'O'
+         AND lower(enr.attribute_name) = 's_managed_delete_flag'
+         AND EXISTS (
+             SELECT 1 FROM meta.source s
+             WHERE s.source_id = in_source_id AND s.managed_data_history_flag
+         )
+   ) THEN
+       v_sql := v_sql || format(
+           E'\nLEFT JOIN %s.MDM._%s_current MDR_%s ON MDR_%s.s_key = %s.s_key AND MDR_%s.attribute_name = ''__delete__'' AND MDR_%s.event_type = ''ROW_DELETE''',
+           meta.u_sys_config('datalake-db-name'), in_source_id, in_source_id,
+           in_source_id, v_table_alias, in_source_id, in_source_id
+       );
+   END IF;
 
    -- Add current CTE many-joins
     v_sql := v_sql || meta.u_enr_query_generate_many_joins(in_source_id, v_cte);

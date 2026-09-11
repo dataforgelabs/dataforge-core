@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS meta.source
     ipu_rules_weight int,
     sub_source_enrichment_id int,
     parent_source_id int,
+    managed_data_history_flag boolean NOT NULL DEFAULT false,
     CONSTRAINT pk_source PRIMARY KEY (source_id),
     CONSTRAINT ux_source_project_source_name UNIQUE (project_id, source_name),
     CONSTRAINT ux_source_project_hub_view_name UNIQUE (project_id, hub_view_name),

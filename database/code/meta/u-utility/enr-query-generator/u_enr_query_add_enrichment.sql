@@ -15,6 +15,10 @@ v_table_alias text = 'T' || in_enr.source_id;
 v_transform_list text;
 v_sibling_enrichment_dependencies int[];
 v_error text;
+v_managed_history boolean;
+v_managed_type text;
+v_row_delete_expression text;
+v_managed_value_alias text;
 
 BEGIN
 
@@ -32,6 +36,41 @@ v_error = meta.u_validate_expression_parameters(in_enr);
 PERFORM meta.u_assert(v_error = '', 'Invalid rule: ' || v_error);
 v_expression := in_enr.expression_parsed;
 PERFORM meta.u_assert( v_expression IS NOT NULL, 'expression_parsed is NULL for enrichment=' || to_json(in_enr));
+
+-- Managed values are resolved before dependent rules. The latest append-only
+-- event overrides the calculated value; an explicit NULL remains distinct from
+-- clearing an override. Delete/restore events derive a separate read-only
+-- steward-delete flag, leaving approval independent and user-editable.
+SELECT s.managed_data_history_flag
+INTO v_managed_history
+FROM meta.source s
+WHERE s.source_id = in_enr.source_id;
+
+IF in_enr.rule_type_code = 'O' AND COALESCE(v_managed_history, false) THEN
+    SELECT at.hive_ddl_type
+    INTO v_managed_type
+    FROM meta.attribute_type at
+    WHERE lower(at.hive_type) = lower(in_enr.datatype);
+    v_managed_type := COALESCE(v_managed_type, in_enr.datatype);
+    v_managed_value_alias := 'MDV_' || in_enr.enrichment_id;
+
+    v_row_delete_expression := 'MDR_' || in_enr.source_id || '.s_key IS NOT NULL';
+
+    v_expression := format(
+        'CASE %s WHEN %s.s_key IS NOT NULL THEN CASE WHEN %s.explicit_null THEN CAST(NULL AS %s) ELSE CAST(%s.value_text AS %s) END ELSE (%s) END',
+        CASE
+            WHEN lower(in_enr.attribute_name) = 's_managed_delete_flag'
+            THEN 'WHEN ' || v_row_delete_expression || ' THEN true'
+            ELSE ''
+        END,
+        v_managed_value_alias,
+        v_managed_value_alias,
+        v_managed_type,
+        v_managed_value_alias,
+        v_managed_type,
+        v_expression
+    );
+END IF;
 -- Process aggregate parameters
 -- a.expression := AVG(P_<parameter_id1> + P_<parameter_id2> + ... 
 -- + A_<aggregation_id1> + A_<aggregation_id2> ...
