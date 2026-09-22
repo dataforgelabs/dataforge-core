@@ -94,7 +94,7 @@ FOR v_cte IN 0 .. v_cte_max LOOP
                            SELECT 1 FROM meta.source managed_source
                            WHERE managed_source.source_id = e.source_id
                              AND COALESCE((managed_source.cdc_refresh_parameters->>'allow_row_edits')::boolean, false)
-                       ) THEN ' AND ' || e.alias || '.s_approved_flag = true AND ' || e.alias || '.s_managed_delete_flag = false' ELSE '' END,
+                       ) THEN ' AND ' || e.alias || '.s_approved_flag = true AND ' || e.alias || '.s_override_delete_flag = false' ELSE '' END,
                        ' ' ORDER BY e.alias)
    FROM elements e WHERE e.container_source_id = in_source_id AND e.type = 'join' AND e.cte = v_cte),'');
 
@@ -124,7 +124,7 @@ FOR v_cte IN 0 .. v_cte_max LOOP
          AND e.type = 'enrichment'
          AND e.cte = v_cte
          AND enr.rule_type_code = 'O'
-         AND lower(enr.attribute_name) = 's_managed_delete_flag'
+         AND lower(enr.attribute_name) = 's_override_delete_flag'
          AND EXISTS (
              SELECT 1 FROM meta.source s
              WHERE s.source_id = in_source_id AND s.managed_data_history_flag

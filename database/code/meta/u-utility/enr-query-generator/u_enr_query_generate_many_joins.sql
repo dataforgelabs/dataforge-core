@@ -39,7 +39,7 @@ FOR v_el IN
                 SELECT 1 FROM meta.source managed_source
                 WHERE managed_source.source_id = v_el.source_id
                   AND COALESCE((managed_source.cdc_refresh_parameters->>'allow_row_edits')::boolean, false)
-            ) THEN ' AND R.s_approved_flag = true AND R.s_managed_delete_flag = false' ELSE '' END
+            ) THEN ' AND R.s_approved_flag = true AND R.s_override_delete_flag = false' ELSE '' END
         END
         || ') ' || v_el.alias || ' ON true';
 

@@ -59,7 +59,7 @@ IF in_enr.rule_type_code = 'O' AND COALESCE(v_managed_history, false) THEN
     v_expression := format(
         'CASE %s WHEN %s.s_key IS NOT NULL THEN CASE WHEN %s.explicit_null THEN CAST(NULL AS %s) ELSE CAST(%s.value_text AS %s) END ELSE (%s) END',
         CASE
-            WHEN lower(in_enr.attribute_name) = 's_managed_delete_flag'
+            WHEN lower(in_enr.attribute_name) = 's_override_delete_flag'
             THEN 'WHEN ' || v_row_delete_expression || ' THEN true'
             ELSE ''
         END,
