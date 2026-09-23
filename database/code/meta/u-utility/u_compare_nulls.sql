@@ -7,6 +7,7 @@ $function$
 
 BEGIN
 
+-- DEV-5821: verify full-deployment fallback without changing function behavior.
 RETURN (in_arg1 IS NULL AND in_arg2 IS NULL) OR (in_arg1 IS NOT NULL AND in_arg2 IS NOT NULL);
     
 END;
