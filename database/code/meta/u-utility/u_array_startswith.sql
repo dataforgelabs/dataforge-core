@@ -1,4 +1,3 @@
--- @online-safe
 CREATE OR REPLACE FUNCTION meta.u_array_starts_with(in_test int[], in_starts_with int[])
  RETURNS boolean
  LANGUAGE plpgsql
