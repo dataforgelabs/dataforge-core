@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS meta.enrichment
         REFERENCES meta.source (source_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION,
-    CONSTRAINT enrichment_rule_type_code_check CHECK (rule_type_code = ANY (ARRAY['V'::bpchar, 'E'::bpchar])),
+    CONSTRAINT enrichment_rule_type_code_check CHECK (rule_type_code = ANY (ARRAY['V'::bpchar, 'E'::bpchar, 'O'::bpchar])),
     CONSTRAINT enrichment_datatype_fkey FOREIGN KEY (datatype) REFERENCES meta.attribute_type(hive_type),
     CONSTRAINT enrichment_parent_enrichment_id_fkey FOREIGN KEY (parent_enrichment_id)
         REFERENCES meta.enrichment (enrichment_id) ON DELETE CASCADE
@@ -46,4 +46,3 @@ CREATE INDEX IF NOT EXISTS ix_enrichment_parent_enrichment_id
     ON meta.enrichment USING btree
     (parent_enrichment_id)
     TABLESPACE pg_default;
-

@@ -241,6 +241,10 @@ RAISE DEBUG 'Parsed % aggregates',(SELECT COUNT(1) FROM  _aggs_parsed);
                         RETURN json_build_object('error', v_parameter.error);
                     END IF;
 
+                    IF v_parameter.system_attribute_id = 8 THEN
+                        RETURN json_build_object('error', 's_validation_status_code cannot be used in rule expressions because it is calculated after validation rules.');
+                    END IF;
+
                     IF v_parameter.enrichment_id = in_enr.enrichment_id THEN
                         RETURN json_build_object('error', format('Self-reference detected in attribute [%s].%s at position %s',v_source_name, v_attribute_name, v_attribute_start_position));
                     END IF;

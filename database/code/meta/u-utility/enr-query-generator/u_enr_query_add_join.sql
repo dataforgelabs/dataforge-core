@@ -22,6 +22,7 @@ v_ret_element_id int;
 v_source_relation_id int := in_source_relation_ids[array_upper(in_source_relation_ids, 1)];
 v_cardinality text;
 v_uv_enrichment_id int;
+v_uv_attribute_name text;
 v_self_join_flag boolean;
 v_join_container_source_id int := in_container_source_id;
 
@@ -99,10 +100,11 @@ FOR v_parameter IN
     END LOOP;
 
 -- Add Join unique filters
-FOR v_attribute_name, v_uv_enrichment_id, v_self_join_flag IN 
-    SELECT e.attribute_name, eu.enrichment_id, eu.source_id = in_source_id AND p.self_relation_container IS NOT NULL
+FOR v_attribute_name, v_uv_enrichment_id, v_uv_attribute_name, v_self_join_flag IN
+    SELECT e.attribute_name, eu.enrichment_id, eu.attribute_name, eu.source_id = in_source_id AND p.self_relation_container IS NOT NULL
     FROM meta.source_relation_parameter p JOIN meta.enrichment e ON p.enrichment_id = e.enrichment_id
-    LEFT JOIN meta.enrichment eu ON eu.parent_enrichment_id = e.enrichment_id AND eu.attribute_name LIKE '%_uv_flag'
+    LEFT JOIN meta.enrichment eu ON eu.parent_enrichment_id = e.enrichment_id
+        AND eu.validation_type_code = 'U' AND eu.active_flag
     WHERE p.source_relation_id = v_source_relation_id AND p.source_id = in_source_id
     AND p.type= 'enrichment' AND e.unique_flag
     LOOP
@@ -113,7 +115,7 @@ FOR v_attribute_name, v_uv_enrichment_id, v_self_join_flag IN
         END IF;
 
         v_join_expression := v_join_expression || ' AND ' || v_join_alias || '.' 
-         || v_attribute_name || '_uv_flag';
+         || v_uv_attribute_name;
     END LOOP;    
 
 -- Inserting the join record

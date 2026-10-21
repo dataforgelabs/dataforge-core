@@ -1,4 +1,4 @@
-  CREATE TABLE IF NOT EXISTS meta.source_relation_parameter (
+CREATE TABLE IF NOT EXISTS meta.source_relation_parameter (
      source_relation_parameter_id int NOT NULL,
      source_relation_id int, -- container for the parameter
      type text NOT NULL CHECK(type IN ('raw','enrichment','system')), -- raw, enriched, system
@@ -16,3 +16,6 @@
      CONSTRAINT relation_parameter_not_blank CHECK(enrichment_id IS NOT NULL OR raw_attribute_id IS NOT NULL OR system_attribute_id IS NOT NULL)
 );
 
+CREATE INDEX IF NOT EXISTS ix_source_relation_parameter_raw_attribute_id
+ON meta.source_relation_parameter (raw_attribute_id)
+WHERE type = 'raw';

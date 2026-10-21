@@ -9,6 +9,7 @@ DECLARE
     v_index int;
 BEGIN
 
+-- DEV-5821: verify online replacement without changing function behavior.
 IF v_length_startswith = 0 THEN
     RETURN true;
 ELSEIF v_length_startswith > v_length_test THEN

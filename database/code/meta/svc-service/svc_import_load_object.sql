@@ -13,14 +13,14 @@ BEGIN
     IF in_path = 'meta.yaml' THEN
         PERFORM meta.imp_check_format(in_import_id, (in_body::json)->>'format');
     ELSEIF in_path = 'variables.yaml' THEN
-        INSERT INTO meta.import_object(  import_id, file_path, object_type, body_text) VALUES
-        (in_import_id, in_path, 'variables', in_body);
+        INSERT INTO meta.import_object(  import_id, file_path, object_type, body) VALUES
+        (in_import_id, in_path, 'variables', in_body::jsonb);
     ELSEIF in_path = 'relations.yaml' THEN
-        INSERT INTO meta.import_object(  import_id, file_path, object_type, body_text) VALUES
-        (in_import_id, in_path, 'relations', in_body);
+        INSERT INTO meta.import_object(  import_id, file_path, object_type, body) VALUES
+        (in_import_id, in_path, 'relations', in_body::jsonb);
     ELSEIF in_path = 'defaults.yaml' THEN
-        INSERT INTO meta.import_object(  import_id, file_path, object_type, body_text) VALUES
-        (in_import_id, in_path, 'defaults', in_body);
+        INSERT INTO meta.import_object(  import_id, file_path, object_type, body) VALUES
+        (in_import_id, in_path, 'defaults', in_body::jsonb);
     ELSEIF in_path ~ format('^(%s)s/', array_to_string(v_obj_types,'|')) THEN
         v_object_type := substring(in_path from '^(\w+)s/');
 
@@ -32,8 +32,8 @@ BEGIN
                 RAISE EXCEPTION 'Unknown object type % in file %', v_object_type, in_path;
         END IF;
 
-        INSERT INTO meta.import_object(  import_id, file_path, object_type, body_text) VALUES
-        (in_import_id, in_path, v_object_type, in_body);
+        INSERT INTO meta.import_object(  import_id, file_path, object_type, body) VALUES
+        (in_import_id, in_path, v_object_type, in_body::jsonb);
     ELSE
         INSERT INTO log.actor_log (log_id, message, actor_path, severity, insert_datetime)
         SELECT i.log_id, format('Skipped unknown object %s. Please check you project',in_path), 'svc_import_restart', 'W', now()
