@@ -15,6 +15,9 @@ BEGIN
     IF in_status_code = 'F' THEN
        INSERT INTO log.actor_log (log_id, message, actor_path, severity, insert_datetime)
         VALUES ( v_log_id, 'Import failed : ' || COALESCE(in_err, 'NULL'),'svc_import_complete', 'E', clock_timestamp());
+    ELSEIF in_status_code = 'I' THEN
+        INSERT INTO log.actor_log (log_id, message, actor_path, severity, insert_datetime)
+        VALUES ( v_log_id, 'Import files loaded; starting parsing and validation. ' || COALESCE(in_err, ''),'svc_import_complete', 'I', clock_timestamp());
     ELSEIF in_status_code = 'Q' THEN
         INSERT INTO log.actor_log (log_id, message, actor_path, severity, insert_datetime)
         VALUES ( v_log_id, 'Import loaded. ' || COALESCE(in_err, ''),'svc_import_complete', 'I', clock_timestamp());

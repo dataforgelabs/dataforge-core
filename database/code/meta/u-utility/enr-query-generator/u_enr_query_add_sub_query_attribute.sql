@@ -1,1 +1,0 @@
-DROP FUNCTION IF EXISTS meta.u_enr_query_add_sub_query_attribute(meta.enrichment_aggregation);
